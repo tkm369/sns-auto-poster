@@ -1,11 +1,11 @@
 import json
 from datetime import datetime
 import pytz
-import google.generativeai as genai
+from google import genai
 from config import GEMINI_API_KEY, AFFILIATE_LINK, AFFILIATE_TEXT
 
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel("gemini-2.0-flash")
+client = genai.Client(api_key=GEMINI_API_KEY)
+MODEL = "gemini-2.0-flash-lite"
 
 
 def get_time_theme():
@@ -40,7 +40,7 @@ def generate_posts(platform="x"):
 
 【投稿3案を「---」で区切って出力してください】"""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model=MODEL, contents=prompt)
     posts = response.text.strip().split("---")
     posts = [p.strip() for p in posts if len(p.strip()) > 20]
     return posts[:3]
@@ -62,7 +62,7 @@ def score_post(post):
 以下のJSON形式のみで返してください（説明不要）:
 {{"score": 数字, "reason": "一言"}}"""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model=MODEL, contents=prompt)
     try:
         text = response.text
         start = text.find("{")
@@ -91,7 +91,7 @@ def improve_post(post, platform="x"):
 
 改善後の投稿のみ返してください（説明・コメント不要）:"""
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(model=MODEL, contents=prompt)
     return response.text.strip()
 
 
