@@ -1,0 +1,36 @@
+name: SNS Auto Post
+
+on:
+  schedule:
+    - cron: '0 23 * * *'   # UTC 23:00 = JST 08:00 (朝投稿)
+    - cron: '0 4 * * *'    # UTC 04:00 = JST 13:00 (昼投稿)
+    - cron: '0 11 * * *'   # UTC 11:00 = JST 20:00 (夜投稿)
+  workflow_dispatch:        # GitHub上から手動実行も可能
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python 3.11 セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 依存ライブラリをインストール
+        run: pip install -r sns_auto_poster/requirements.txt
+
+      - name: 自動投稿を実行
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          AFFILIATE_LINK: ${{ secrets.AFFILIATE_LINK }}
+        run: cd sns_auto_poster && python main.py
