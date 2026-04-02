@@ -6,6 +6,8 @@ tiktok-uploader ライブラリを使用してボット検出を回避。
 """
 
 import os
+import json
+import tempfile
 import logging
 
 import config
@@ -17,21 +19,23 @@ def _session_id() -> str:
     return os.environ.get("TIKTOK_SESSION_ID", "") or config.TIKTOK_SESSION_ID
 
 
-def _cookies_list():
-    """sessionid を tiktok-uploader が受け付けるcookieリスト形式に変換"""
+def _write_cookies_file() -> str:
+    """sessionid を Netscape cookie ファイルに書き出して、パスを返す"""
     sid = _session_id()
     if not sid or sid == "your_tiktok_session_id":
         return None
-    return [
-        {
-            "name": "sessionid",
-            "value": sid,
-            "domain": ".tiktok.com",
-            "path": "/",
-            "secure": True,
-            "httpOnly": True,
-        }
+
+    # Netscape cookie format
+    lines = [
+        "# Netscape HTTP Cookie File",
+        ".tiktok.com\tTRUE\t/\tTRUE\t0\tsessionid\t" + sid,
     ]
+    tmp = tempfile.NamedTemporaryFile(
+        mode="w", suffix=".txt", delete=False, encoding="utf-8"
+    )
+    tmp.write("\n".join(lines))
+    tmp.close()
+    return tmp.name
 
 
 def upload_to_tiktok(
@@ -48,8 +52,8 @@ def upload_to_tiktok(
         logger.error(f"動画ファイルが見つかりません: {video_path}")
         return False
 
-    cookies = _cookies_list()
-    if not cookies:
+    cookies_path = _write_cookies_file()
+    if not cookies_path:
         logger.error("TIKTOK_SESSION_ID が設定されていません")
         return False
 
@@ -61,7 +65,7 @@ def upload_to_tiktok(
         results = upload_video(
             filename=video_path,
             description=caption,
-            cookies=cookies,
+            cookies=cookies_path,
             headless=headless,
             browser="chrome",
         )
@@ -80,6 +84,9 @@ def upload_to_tiktok(
         import traceback
         logger.error(traceback.format_exc())
         return False
+    finally:
+        if cookies_path and os.path.exists(cookies_path):
+            os.unlink(cookies_path)
 
 
 # --- 動作確認用 ---
