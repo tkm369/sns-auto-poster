@@ -84,9 +84,12 @@ def upload_to_tiktok(
             for upload_url in upload_urls:
                 logger.info(f"TikTok Studio を開いています: {upload_url}")
                 page.goto(upload_url, timeout=30000)
-                time.sleep(4)
-                if "login" not in page.url.lower():
-                    logger.info(f"ページ到達: {page.url}")
+                # JSによるリダイレクト完了を待つ (最大10秒)
+                time.sleep(8)
+                current_url = page.url
+                logger.info(f"[DEBUG] 遷移後URL: {current_url}")
+                if "login" not in current_url.lower():
+                    logger.info(f"ページ到達: {current_url}")
                     break
             else:
                 logger.error("セッションが切れています。TIKTOK_SESSION_ID を更新してください。")
