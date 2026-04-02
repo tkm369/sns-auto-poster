@@ -37,8 +37,19 @@ def add_post(post_id, platform, content, time_slot, has_affiliate=False):
     log.append(entry)
     save_log(log)
 
-def get_time_slot_performance():
-    """時間帯別の平均エンゲージメント率を返す {slot: avg_rate}"""
+def count_posts_today():
+    """今日すでに投稿した回数（X投稿をラン数として使用）"""
+    log = load_log()
+    jst = pytz.timezone("Asia/Tokyo")
+    today = datetime.now(jst).strftime("%Y-%m-%d")
+    return sum(
+        1 for p in log
+        if p.get("platform") == "x" and p.get("timestamp", "").startswith(today)
+    )
+
+
+def get_time_slot_stats():
+    """時間帯別の投稿数と平均エンゲージメント率を返す {slot: {"count": N, "avg_rate": float}}"""
     from collections import defaultdict
     log = load_log()
     slot_data = defaultdict(list)
@@ -48,7 +59,15 @@ def get_time_slot_performance():
             rate = p["metrics"].get("engagement_rate", 0)
             if slot:
                 slot_data[slot].append(rate)
-    return {slot: sum(rates) / len(rates) for slot, rates in slot_data.items() if rates}
+    return {
+        slot: {"count": len(rates), "avg_rate": sum(rates) / len(rates)}
+        for slot, rates in slot_data.items() if rates
+    }
+
+
+def get_time_slot_performance():
+    """時間帯別の平均エンゲージメント率を返す {slot: avg_rate}（後方互換）"""
+    return {slot: s["avg_rate"] for slot, s in get_time_slot_stats().items()}
 
 
 def get_top_posts(n=3, has_affiliate=False):
