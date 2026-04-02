@@ -20,16 +20,24 @@ def _session_id() -> str:
 
 
 def _write_cookies_file() -> str:
-    """sessionid を Netscape cookie ファイルに書き出して、パスを返す"""
+    """全Cookieを Netscape cookie ファイルに書き出して、パスを返す"""
     sid = _session_id()
     if not sid or sid == "your_tiktok_session_id":
         return None
 
-    # Netscape cookie format
-    lines = [
-        "# Netscape HTTP Cookie File",
-        ".tiktok.com\tTRUE\t/\tTRUE\t0\tsessionid\t" + sid,
-    ]
+    # Netscape cookie format: domain TRUE path secure expiry name value
+    lines = ["# Netscape HTTP Cookie File"]
+    lines.append(f".tiktok.com\tTRUE\t/\tTRUE\t0\tsessionid\t{sid}")
+
+    # 追加Cookie (TIKTOK_EXTRA_COOKIES 環境変数から)
+    extra_json = os.environ.get("TIKTOK_EXTRA_COOKIES", "[]")
+    try:
+        for c in json.loads(extra_json):
+            secure = "TRUE" if c.get("secure", False) else "FALSE"
+            lines.append(f"{c['domain']}\tTRUE\t{c['path']}\t{secure}\t0\t{c['name']}\t{c['value']}")
+    except Exception:
+        pass
+
     tmp = tempfile.NamedTemporaryFile(
         mode="w", suffix=".txt", delete=False, encoding="utf-8"
     )
