@@ -145,10 +145,10 @@ def screenshot_post(url: str) -> str:
     """URLからプラットフォームを自動判定してスクショ取得"""
     if "x.com" in url or "twitter.com" in url:
         path = screenshot_x_post(url)
-    elif "threads.net" in url:
+    elif "threads.net" in url or "threads.com" in url:
         path = screenshot_threads_post(url)
     else:
-        raise ValueError(f"未対応のURL: {url}  (x.com / threads.net のみ対応)")
+        raise ValueError(f"未対応のURL: {url}  (x.com / threads.net / threads.com のみ対応)")
     return crop_post_body(path)
 
 
