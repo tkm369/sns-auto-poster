@@ -5,6 +5,7 @@ import pytz
 from google import genai
 from config import GEMINI_API_KEY, AFFILIATE_LINK, AFFILIATE_TEXT
 from logger import get_top_posts, get_time_slot_performance
+from trends import load_trends
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 MODEL = "gemini-2.5-flash"
@@ -96,6 +97,18 @@ def generate_and_score_posts(platform="x", top_posts=None):
                 lines.append(f"この時間帯（{time_slot}）のエンゲージを{best[0]}並みに引き上げるよう工夫してください。")
         time_perf_section = "\n" + "\n".join(lines) + "\n"
 
+    # トレンド注入
+    trends = load_trends()
+    trends_section = ""
+    if trends:
+        lines = ["【今日のトレンド（投稿に自然に絡めるとバズりやすい）】"]
+        if trends.get("genre_trends"):
+            lines.append(f"占い・恋愛ジャンルの注目ワード: {', '.join(trends['genre_trends'][:6])}")
+        if trends.get("trending_now"):
+            lines.append(f"日本のトレンド（フックに使えそうなもの）: {', '.join(trends['trending_now'][:5])}")
+        lines.append("※ 無理に全部入れず、自然に絡められるものだけ使うこと")
+        trends_section = "\n" + "\n".join(lines) + "\n"
+
     if AFFILIATE_LINK:
         cta_instruction = f'- 最後に「{AFFILIATE_TEXT} {AFFILIATE_LINK}」を自然に含める'
     else:
@@ -103,7 +116,7 @@ def generate_and_score_posts(platform="x", top_posts=None):
 
     prompt = f"""あなたはフォロワーを惹きつける人気SNS占い師です。
 「{theme}」というテーマで、{platform}用の投稿を3案作成し、各案のエンゲージメントスコア(0-100)を付けてください。
-{top_posts_section}{time_perf_section}
+{top_posts_section}{time_perf_section}{trends_section}
 【投稿必須条件】
 - 占い・スピリチュアル・恋愛運に関する内容
 - 1行目で読者がスクロールを止めるような「フック」を入れる
