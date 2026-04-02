@@ -25,3 +25,9 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
+
+# TikTok自動投稿
+tiktok_auto/screenshots/
+tiktok_auto/output/
+tiktok_auto/browser_profile/
+tiktok_auto/get_session.py

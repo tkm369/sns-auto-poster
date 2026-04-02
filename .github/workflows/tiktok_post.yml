@@ -1,0 +1,52 @@
+name: TikTok Auto Post
+
+on:
+  schedule:
+    # JST = UTC+9  →  09:00=00:00, 15:00=06:00, 21:00=12:00
+    - cron: '0 0 * * *'   # 毎日 09:00 JST
+    - cron: '0 6 * * *'   # 毎日 15:00 JST
+    - cron: '0 12 * * *'  # 毎日 21:00 JST
+  workflow_dispatch:       # 手動実行ボタン
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # queue.json を更新してコミットするため
+
+    steps:
+      # ---- リポジトリをチェックアウト ----------------------------
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ---- Python セットアップ -----------------------------------
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # ---- 依存ライブラリをインストール --------------------------
+      - name: Install dependencies
+        run: |
+          pip install playwright moviepy Pillow schedule numpy
+          playwright install chromium --with-deps
+
+      # ---- ffmpeg は ubuntu-latest に標準搭載 ------------------
+
+      # ---- 1件投稿 (キューから取り出して処理) -------------------
+      - name: Run post job
+        env:
+          TIKTOK_SESSION_ID: ${{ secrets.TIKTOK_SESSION_ID }}
+        run: |
+          cd tiktok_auto
+          python post_job.py
+
+      # ---- 更新した queue.json をコミット ----------------------
+      - name: Commit queue update
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add tiktok_auto/queue.json
+          git diff --staged --quiet || git commit -m "chore: queue update [skip ci]"
+          git push
