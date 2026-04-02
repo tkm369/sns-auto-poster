@@ -21,7 +21,7 @@ def save_log(log):
     with open(LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(log, f, ensure_ascii=False, indent=2)
 
-def add_post(post_id, platform, content, time_slot):
+def add_post(post_id, platform, content, time_slot, has_affiliate=False):
     log = load_log()
     jst = pytz.timezone("Asia/Tokyo")
     entry = {
@@ -30,18 +30,22 @@ def add_post(post_id, platform, content, time_slot):
         "timestamp": datetime.now(jst).isoformat(),
         "content": content,
         "time_slot": time_slot,
+        "has_affiliate": has_affiliate,
         "metrics": None,
         "metrics_collected": False
     }
     log.append(entry)
     save_log(log)
 
-def get_top_posts(n=3):
-    """エンゲージメント率が高い上位N件を返す（Threads投稿のみ）"""
+def get_top_posts(n=3, has_affiliate=False):
+    """エンゲージメント率が高い上位N件を返す（Threads投稿のみ・同じモードの投稿から学習）"""
     log = load_log()
     scored = [
         p for p in log
-        if p.get("metrics_collected") and p.get("metrics") and p.get("platform") == "threads"
+        if p.get("metrics_collected")
+        and p.get("metrics")
+        and p.get("platform") == "threads"
+        and p.get("has_affiliate", False) == has_affiliate  # アフィリあり/なしを分けて学習
     ]
     scored.sort(key=lambda x: x["metrics"].get("engagement_rate", 0), reverse=True)
     return scored[:n]

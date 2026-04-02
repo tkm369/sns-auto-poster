@@ -3,6 +3,7 @@ from generator import get_best_post
 from poster import post_to_x, post_to_threads
 from logger import add_post
 from generator import get_time_theme
+from config import AFFILIATE_LINK
 
 
 def main():
@@ -36,10 +37,11 @@ def main():
     threads_id = post_to_threads(threads_post)
 
     # ログ記録
+    has_affiliate = bool(AFFILIATE_LINK)
     if x_id:
-        add_post(x_id, "x", x_post, time_slot)
+        add_post(x_id, "x", x_post, time_slot, has_affiliate=has_affiliate)
     if threads_id:
-        add_post(threads_id, "threads", threads_post, time_slot)
+        add_post(threads_id, "threads", threads_post, time_slot, has_affiliate=has_affiliate)
 
     # 結果サマリー
     print("\n" + "=" * 40)

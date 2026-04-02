@@ -66,6 +66,11 @@ def generate_and_score_posts(platform="x", top_posts=None):
         lines.append("これらの投稿の特徴（書き出し・構成・トーン）を参考にしてください。")
         top_posts_section = "\n" + "\n".join(lines) + "\n"
 
+    if AFFILIATE_LINK:
+        cta_instruction = f'- 最後に「{AFFILIATE_TEXT} {AFFILIATE_LINK}」を自然に含める'
+    else:
+        cta_instruction = "- 最後に「続きが気になる人はプロフへ」など、プロフィールへ誘導するCTAを入れる"
+
     prompt = f"""あなたはフォロワーを惹きつける人気SNS占い師です。
 「{theme}」というテーマで、{platform}用の投稿を3案作成し、各案のエンゲージメントスコア(0-100)を付けてください。
 {top_posts_section}
@@ -73,7 +78,7 @@ def generate_and_score_posts(platform="x", top_posts=None):
 - 占い・スピリチュアル・恋愛運に関する内容
 - 1行目で読者がスクロールを止めるような「フック」を入れる
 - 読者が「自分のことだ」と感じる共感ワードを使う
-- 最後に「{AFFILIATE_TEXT} {AFFILIATE_LINK}」を自然に含める
+{cta_instruction}
 - {max_chars}文字以内
 - 絵文字を効果的に使う（多すぎない）
 - ハッシュタグを末尾に4〜6個（#占い #恋愛運 #スピリチュアル #開運 など）
@@ -105,12 +110,17 @@ def improve_post(post, platform="x"):
     """最高スコア投稿をさらに磨く"""
     max_chars = 240 if platform == "x" else 450
 
+    if AFFILIATE_LINK:
+        cta_improve = "- CTAのアフィリリンクへの誘導をより自然で背中を押す表現にする"
+    else:
+        cta_improve = "- プロフィール誘導CTAをより自然で気になる表現にする（リンクは入れない）"
+
     prompt = f"""以下のSNS占い投稿をより魅力的に改善してください。
 
 【改善ポイント】
 - 1行目のフックをさらに強烈にする（数字・疑問・断言のどれかを使う）
 - 中間部分に「共感→希望」の流れを作る
-- CTAをより自然で背中を押す表現にする
+{cta_improve}
 - {max_chars}文字以内に必ず収める
 - ハッシュタグは末尾にまとめる
 
@@ -126,7 +136,7 @@ def get_best_post(platform="x"):
     """生成→スコアリング→改善の全フローを実行（API呼び出し2回）"""
     print(f"  [{platform}] 投稿案を生成・スコアリング中...")
 
-    top_posts = get_top_posts(n=3)
+    top_posts = get_top_posts(n=3, has_affiliate=bool(AFFILIATE_LINK))
     best_post = generate_and_score_posts(platform, top_posts=top_posts)
 
     print(f"  [{platform}] 投稿を改善中...")
