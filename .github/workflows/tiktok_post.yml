@@ -10,29 +10,20 @@ on:
 
 jobs:
   post:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted   # 自分のPCで実行（住宅IP）
     permissions:
-      contents: write      # queue.json を更新してコミットするため
+      contents: write
 
     steps:
       # ---- リポジトリをチェックアウト ----------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ---- Python セットアップ -----------------------------------
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
-          cache: 'pip'
-
       # ---- 依存ライブラリをインストール --------------------------
       - name: Install dependencies
         run: |
-          pip install -r tiktok_auto/requirements.txt
-          playwright install chromium --with-deps
-
-      # ---- ffmpeg は ubuntu-latest に標準搭載 ------------------
+          C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\pip.exe install -r tiktok_auto/requirements.txt
+        shell: cmd
 
       # ---- 新着取得 → 動画生成 → TikTok投稿 -------------------
       - name: Run post job
@@ -46,16 +37,8 @@ jobs:
           THREADS_USER_ID:        ${{ secrets.THREADS_USER_ID }}
         run: |
           cd tiktok_auto
-          python post_job.py
-
-      # ---- デバッグ用スクショをアーティファクトとして保存 --------
-      - name: Upload debug screenshots
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: debug-screenshots
-          path: tiktok_auto/screenshots/
-          retention-days: 3
+          C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe post_job.py
+        shell: cmd
 
       # ---- queue.json / seen_ids.json をコミット ---------------
       - name: Commit state update
@@ -65,3 +48,4 @@ jobs:
           git add tiktok_auto/queue.json tiktok_auto/seen_ids.json
           git diff --staged --quiet || git commit -m "chore: auto queue update [skip ci]"
           git push
+        shell: cmd
