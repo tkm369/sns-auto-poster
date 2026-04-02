@@ -76,20 +76,29 @@ def upload_to_tiktok(
         page = context.new_page()
 
         try:
-            # ---- TikTok Creator Center (投稿ページ) へ移動 ----------
-            logger.info("TikTok Creator Center を開いています...")
-            page.goto("https://www.tiktok.com/creator-center/upload", timeout=30000)
-            time.sleep(3)
-
-            # ログイン確認
-            if "login" in page.url.lower():
-                logger.error("セッションが切れています。python setup_login.py を再実行してください。")
+            # ---- TikTok Studio 投稿ページへ移動 (複数URLを試す) ----
+            upload_urls = [
+                "https://www.tiktok.com/tiktokstudio/upload",
+                "https://www.tiktok.com/creator-center/upload",
+            ]
+            for upload_url in upload_urls:
+                logger.info(f"TikTok Studio を開いています: {upload_url}")
+                page.goto(upload_url, timeout=30000)
+                time.sleep(4)
+                if "login" not in page.url.lower():
+                    logger.info(f"ページ到達: {page.url}")
+                    break
+            else:
+                logger.error("セッションが切れています。TIKTOK_SESSION_ID を更新してください。")
                 return False
 
             # ---- 動画ファイルをアップロード -------------------------
             logger.info(f"動画をアップロード中: {video_path}")
+            # file inputは非表示のことがあるので force=True で対応
             upload_input = page.locator('input[type="file"]').first
-            upload_input.wait_for(timeout=20000)
+            upload_input.wait_for(state="attached", timeout=30000)
+            page.evaluate("el => el.style.display = 'block'",
+                          upload_input.element_handle())
             upload_input.set_input_files(video_path)
 
             # アップロード処理完了を待つ (最大3分)

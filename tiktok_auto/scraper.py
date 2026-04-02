@@ -99,26 +99,51 @@ def screenshot_threads_post(url: str) -> str:
         page = context.new_page()
 
         try:
-            page.goto(url, wait_until="networkidle", timeout=30000)
-            # ログインバナーを閉じる
-            try:
-                close_btn = page.locator('[aria-label="Close"]').first
-                close_btn.wait_for(timeout=3000)
-                close_btn.click()
-                time.sleep(0.5)
-            except PlaywrightTimeout:
-                pass
+            page.goto(url, wait_until="domcontentloaded", timeout=30000)
+            time.sleep(3)
 
-            # 投稿の記事要素
-            article = page.locator("article").first
-            article.wait_for(timeout=15000)
-            time.sleep(1.5)
-            article.screenshot(path=save_path)
-            logger.info(f"[Threads] スクショ保存: {save_path}")
+            # ログインバナーを閉じる
+            for selector in ['[aria-label="Close"]', '[aria-label="閉じる"]', 'button:has-text("後で")']:
+                try:
+                    btn = page.locator(selector).first
+                    btn.wait_for(timeout=2000)
+                    btn.click()
+                    time.sleep(0.5)
+                    break
+                except PlaywrightTimeout:
+                    pass
+
+            # 投稿本文のセレクタ (複数試す)
+            selectors = [
+                'article',
+                '[data-pressable-container]',
+                'div[class*="post"]',
+                'main',
+            ]
+            captured = False
+            for sel in selectors:
+                try:
+                    el = page.locator(sel).first
+                    el.wait_for(timeout=8000)
+                    time.sleep(1)
+                    el.screenshot(path=save_path)
+                    captured = True
+                    logger.info(f"[Threads] スクショ保存 ({sel}): {save_path}")
+                    break
+                except Exception:
+                    continue
+
+            if not captured:
+                # フォールバック: ページ中央部を切り出し
+                page.screenshot(path=save_path, full_page=False)
+                logger.info(f"[Threads] フォールバック全体スクショ: {save_path}")
 
         except Exception as e:
             logger.error(f"[Threads] スクショ失敗 {url}: {e}")
-            page.screenshot(path=save_path, full_page=False)
+            try:
+                page.screenshot(path=save_path, full_page=False)
+            except Exception:
+                pass
 
         finally:
             browser.close()
