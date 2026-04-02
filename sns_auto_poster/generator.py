@@ -4,7 +4,7 @@ from datetime import datetime
 import pytz
 from google import genai
 from config import GEMINI_API_KEY, AFFILIATE_LINK, AFFILIATE_TEXT
-from logger import get_top_posts
+from logger import get_top_posts, get_time_slot_performance
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 MODEL = "gemini-2.5-flash"
@@ -40,21 +40,27 @@ def _generate(prompt, max_retries=3):
 
 
 def get_time_theme():
-    """時間帯に応じたテーマを返す"""
+    """時間帯に応じたテーマを返す（6スロット）"""
     jst = pytz.timezone("Asia/Tokyo")
     hour = datetime.now(jst).hour
 
-    if 5 <= hour < 12:
-        return "朝", "今日の恋愛運・朝の開運メッセージ・今日意識すべきこと"
-    elif 12 <= hour < 18:
-        return "昼", "午後の恋愛エネルギー・今日の星座運勢・気になる人との関係"
+    if 5 <= hour < 9:
+        return "早朝", "一日の始まりの開運・今日の恋愛運・今日を輝かせるキーワード"
+    elif 9 <= hour < 12:
+        return "朝", "午前のエネルギー・今日の星座運勢・気になる人へのアクション"
+    elif 12 <= hour < 15:
+        return "昼", "午後の恋愛運・今日のターニングポイント・引き寄せのサイン"
+    elif 15 <= hour < 18:
+        return "午後", "夕方前のエネルギー・今日の振り返り・ハートを開くメッセージ"
+    elif 18 <= hour < 21:
+        return "夕方", "夕暮れの恋愛運・今夜の出会い・引き寄せの時間帯"
     else:
         return "夜", "明日の恋愛運・夜の浄化メッセージ・魂が求めているもの"
 
 
 def generate_and_score_posts(platform="x", top_posts=None):
     """3つの投稿案を生成してスコアリングも一回のAPI呼び出しで行う"""
-    _, theme = get_time_theme()
+    time_slot, theme = get_time_theme()
     max_chars = 240 if platform == "x" else 450
 
     top_posts_section = ""
@@ -66,6 +72,24 @@ def generate_and_score_posts(platform="x", top_posts=None):
         lines.append("これらの投稿の特徴（書き出し・構成・トーン）を参考にしてください。")
         top_posts_section = "\n" + "\n".join(lines) + "\n"
 
+    # 時間帯別パフォーマンスを注入
+    time_perf = get_time_slot_performance()
+    time_perf_section = ""
+    if time_perf:
+        sorted_slots = sorted(time_perf.items(), key=lambda x: x[1], reverse=True)
+        best = sorted_slots[0]
+        current_avg = time_perf.get(time_slot)
+        lines = ["【時間帯別エンゲージメント実績】"]
+        for slot, avg in sorted_slots:
+            marker = " ← 現在" if slot == time_slot else ""
+            lines.append(f"  {slot}: 平均 {avg:.2%}{marker}")
+        if current_avg is not None:
+            if time_slot == best[0]:
+                lines.append(f"この時間帯（{time_slot}）は最もエンゲージが高い。その強みを活かして。")
+            else:
+                lines.append(f"この時間帯（{time_slot}）のエンゲージを{best[0]}並みに引き上げるよう工夫してください。")
+        time_perf_section = "\n" + "\n".join(lines) + "\n"
+
     if AFFILIATE_LINK:
         cta_instruction = f'- 最後に「{AFFILIATE_TEXT} {AFFILIATE_LINK}」を自然に含める'
     else:
@@ -73,7 +97,7 @@ def generate_and_score_posts(platform="x", top_posts=None):
 
     prompt = f"""あなたはフォロワーを惹きつける人気SNS占い師です。
 「{theme}」というテーマで、{platform}用の投稿を3案作成し、各案のエンゲージメントスコア(0-100)を付けてください。
-{top_posts_section}
+{top_posts_section}{time_perf_section}
 【投稿必須条件】
 - 占い・スピリチュアル・恋愛運に関する内容
 - 1行目で読者がスクロールを止めるような「フック」を入れる

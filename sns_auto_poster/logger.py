@@ -37,6 +37,20 @@ def add_post(post_id, platform, content, time_slot, has_affiliate=False):
     log.append(entry)
     save_log(log)
 
+def get_time_slot_performance():
+    """時間帯別の平均エンゲージメント率を返す {slot: avg_rate}"""
+    from collections import defaultdict
+    log = load_log()
+    slot_data = defaultdict(list)
+    for p in log:
+        if p.get("metrics_collected") and p.get("metrics") and p.get("platform") == "threads":
+            slot = p.get("time_slot")
+            rate = p["metrics"].get("engagement_rate", 0)
+            if slot:
+                slot_data[slot].append(rate)
+    return {slot: sum(rates) / len(rates) for slot, rates in slot_data.items() if rates}
+
+
 def get_top_posts(n=3, has_affiliate=False):
     """エンゲージメント率が高い上位N件を返す（Threads投稿のみ・同じモードの投稿から学習）"""
     log = load_log()
