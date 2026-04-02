@@ -127,10 +127,14 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
 
             # 動画処理完了を待つ（最大90秒）
             logger.info("動画処理中... (最大90秒)")
-            for _ in range(18):
+            for i in range(18):
                 time.sleep(5)
                 buttons = page.evaluate("() => Array.from(document.querySelectorAll('button')).map(b => b.innerText.trim())")
-                logger.info(f"現在のボタン一覧: {buttons}")
+                # button以外のクリッカブル要素も探す
+                clickable = page.evaluate("""() => Array.from(document.querySelectorAll('[role="button"],[data-e2e],[class*="next"],[class*="submit"],[class*="post"],[class*="publish"]'))
+                    .map(el => el.innerText?.trim() || el.getAttribute('data-e2e') || el.className).filter(t=>t).slice(0,20)""")
+                logger.info(f"[{i*5}s] ボタン: {[b for b in buttons if b]}")
+                logger.info(f"[{i*5}s] クリッカブル: {clickable[:10]}")
                 # 投稿ボタンが出たら止まる
                 post_keywords = ["投稿する", "Post", "公開する", "投稿", "公開"]
                 if any(any(k in b for k in post_keywords) for b in buttons):
