@@ -23,6 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\pip.exe install -r tiktok_auto/requirements.txt
+          C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe -m playwright install chromium
         shell: cmd
 
       # ---- 新着取得 → 動画生成 → TikTok投稿 -------------------
