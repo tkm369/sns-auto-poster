@@ -94,11 +94,58 @@ def upload_to_tiktok(
 
             # ---- 動画ファイルをアップロード -------------------------
             logger.info(f"動画をアップロード中: {video_path}")
-            # file inputは非表示のことがあるので force=True で対応
-            upload_input = page.locator('input[type="file"]').first
-            upload_input.wait_for(state="attached", timeout=30000)
-            page.evaluate("el => el.style.display = 'block'",
-                          upload_input.element_handle())
+            time.sleep(3)
+
+            # iframeの中にfile inputがある場合を考慮
+            upload_input = None
+
+            # まずメインページで探す
+            try:
+                inp = page.locator('input[type="file"]').first
+                inp.wait_for(state="attached", timeout=8000)
+                upload_input = inp
+                logger.info("メインページでfile inputを発見")
+            except Exception:
+                pass
+
+            # iframeを探す
+            if not upload_input:
+                for frame in page.frames:
+                    try:
+                        inp = frame.locator('input[type="file"]').first
+                        inp.wait_for(state="attached", timeout=5000)
+                        upload_input = inp
+                        logger.info(f"iframe ({frame.url[:60]}) でfile inputを発見")
+                        break
+                    except Exception:
+                        continue
+
+            if not upload_input:
+                # ドラッグ&ドロップエリアをクリックしてfile inputを出す
+                logger.info("ドラッグ&ドロップエリアを探しています...")
+                for sel in ['[class*="upload"]', '[class*="drag"]', 'label[for]', 'button:has-text("ファイル")']:
+                    try:
+                        el = page.locator(sel).first
+                        el.wait_for(timeout=3000)
+                        el.click()
+                        time.sleep(2)
+                        inp = page.locator('input[type="file"]').first
+                        inp.wait_for(state="attached", timeout=5000)
+                        upload_input = inp
+                        logger.info(f"クリック後にfile inputを発見 ({sel})")
+                        break
+                    except Exception:
+                        continue
+
+            if not upload_input:
+                raise Exception("file inputが見つかりませんでした。TikTokページのデバッグが必要です。")
+
+            # file inputを表示状態にして動画をセット
+            try:
+                page.evaluate("el => { el.style.display='block'; el.style.visibility='visible'; }",
+                              upload_input.element_handle())
+            except Exception:
+                pass
             upload_input.set_input_files(video_path)
 
             # アップロード処理完了を待つ (最大3分)
