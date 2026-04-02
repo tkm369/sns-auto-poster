@@ -22,7 +22,11 @@ def _generate(prompt, max_retries=3):
         except Exception as e:
             err_str = str(e)
             if "429" in err_str or "RESOURCE_EXHAUSTED" in err_str:
-                # retry_delay をエラーメッセージから抽出
+                # 日次クォータ超過（PerDay）はリトライしても無意味なので即re-raise
+                if "PerDay" in err_str or "per_day" in err_str.lower() or "GenerateRequestsPerDay" in err_str:
+                    print(f"  日次クォータ超過のため処理を終了します")
+                    raise
+                # RPM制限の場合はwaitしてリトライ
                 import re
                 m = re.search(r"retry in (\d+)", err_str)
                 wait = int(m.group(1)) + 5 if m else 65

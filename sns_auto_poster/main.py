@@ -1,3 +1,4 @@
+import sys
 from generator import get_best_post
 from poster import post_to_x, post_to_threads
 from logger import add_post
@@ -11,15 +12,23 @@ def main():
 
     time_slot, _ = get_time_theme()
 
-    # X用投稿を生成・改善
-    print("\n【X 投稿生成】")
-    x_post = get_best_post(platform="x")
-    print(f"\n--- X 投稿内容 ---\n{x_post}\n")
+    # 投稿生成（APIコール節約のためX・Threads共通コンテンツを1回で生成）
+    print("\n【投稿生成】")
+    try:
+        post_content = get_best_post(platform="x")
+    except Exception as e:
+        err_str = str(e)
+        if "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower() or "429" in err_str:
+            print(f"⚠️  Gemini APIの日次クォータを超過しました（本日の残枠なし）")
+            print(f"   詳細: {err_str[:200]}")
+            print("   次回の実行時間まで待機します。")
+            sys.exit(0)
+        raise
 
-    # Threads用投稿を生成・改善
-    print("\n【Threads 投稿生成】")
-    threads_post = get_best_post(platform="threads")
-    print(f"\n--- Threads 投稿内容 ---\n{threads_post}\n")
+    print(f"\n--- 投稿内容 ---\n{post_content}\n")
+
+    x_post = post_content
+    threads_post = post_content
 
     # 投稿実行
     print("\n【投稿実行】")
