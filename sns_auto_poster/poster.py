@@ -13,18 +13,23 @@ def post_to_x(text):
         print("  [X] APIキーが未設定のためスキップ")
         return None
     try:
-        # requests-oauthlib で直接呼び出してエラーボディを確認
         from requests_oauthlib import OAuth1Session
         oauth = OAuth1Session(
             X_API_KEY, client_secret=X_API_SECRET,
             resource_owner_key=X_ACCESS_TOKEN,
             resource_owner_secret=X_ACCESS_TOKEN_SECRET,
         )
+        # クレデンシャル確認
+        me = oauth.get("https://api.twitter.com/2/users/me")
+        print(f"  [X] /users/me HTTP {me.status_code}: {me.text[:200]}")
+        if me.status_code != 200:
+            return None
+        # 投稿
         resp = oauth.post(
             "https://api.twitter.com/2/tweets",
             json={"text": text},
         )
-        print(f"  [X] HTTP {resp.status_code}: {resp.text[:400]}")
+        print(f"  [X] POST /tweets HTTP {resp.status_code}: {resp.text[:400]}")
         if resp.status_code == 201:
             tweet_id = str(resp.json()["data"]["id"])
             print(f"  [X] 投稿成功 → https://x.com/i/web/status/{tweet_id}")
