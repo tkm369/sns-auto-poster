@@ -11,6 +11,7 @@ import time
 import subprocess
 import logging
 import tempfile
+import threading
 
 import config
 
@@ -43,6 +44,9 @@ def _all_cookies() -> list:
     return cookies
 
 
+UPLOAD_TIMEOUT = 300  # 5分でタイムアウト
+
+
 def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> bool:
     if not os.path.exists(video_path):
         logger.error(f"動画ファイルが見つかりません: {video_path}")
@@ -53,6 +57,30 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
         logger.error("TIKTOK_SESSION_ID が設定されていません")
         return False
 
+    result = [False]
+    exception = [None]
+
+    def _upload():
+        try:
+            result[0] = _upload_inner(video_path, caption, cookies)
+        except Exception as e:
+            exception[0] = e
+
+    t = threading.Thread(target=_upload)
+    t.start()
+    t.join(timeout=UPLOAD_TIMEOUT)
+    if t.is_alive():
+        logger.error(f"アップロードが{UPLOAD_TIMEOUT}秒でタイムアウトしました")
+        return False
+    if exception[0]:
+        logger.error(f"アップロード中にエラー: {exception[0]}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return False
+    return result[0]
+
+
+def _upload_inner(video_path: str, caption: str, cookies: list) -> bool:
     # デバッグ用Chromeを起動
     chrome_proc = subprocess.Popen([
         CHROME_PATH,
@@ -61,6 +89,9 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
         "--no-first-run",
         "--no-default-browser-check",
         "--disable-extensions",
+        "--no-restore-session-state",
+        "--disable-session-crashed-bubble",
+        "--hide-crash-restore-bubble",
         "about:blank",
     ])
     time.sleep(3)
