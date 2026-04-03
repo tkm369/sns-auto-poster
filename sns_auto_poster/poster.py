@@ -13,29 +13,25 @@ def post_to_x(text):
         print("  [X] APIキーが未設定のためスキップ")
         return None
     try:
-        client = tweepy.Client(
-            consumer_key=X_API_KEY,
-            consumer_secret=X_API_SECRET,
-            access_token=X_ACCESS_TOKEN,
-            access_token_secret=X_ACCESS_TOKEN_SECRET,
+        # requests-oauthlib で直接呼び出してエラーボディを確認
+        from requests_oauthlib import OAuth1Session
+        oauth = OAuth1Session(
+            X_API_KEY, client_secret=X_API_SECRET,
+            resource_owner_key=X_ACCESS_TOKEN,
+            resource_owner_secret=X_ACCESS_TOKEN_SECRET,
         )
-        response = client.create_tweet(text=text)
-        tweet_id = str(response.data["id"])
-        print(f"  [X] 投稿成功 → https://x.com/i/web/status/{tweet_id}")
-        return tweet_id
+        resp = oauth.post(
+            "https://api.twitter.com/2/tweets",
+            json={"text": text},
+        )
+        print(f"  [X] HTTP {resp.status_code}: {resp.text[:400]}")
+        if resp.status_code == 201:
+            tweet_id = str(resp.json()["data"]["id"])
+            print(f"  [X] 投稿成功 → https://x.com/i/web/status/{tweet_id}")
+            return tweet_id
+        return None
     except Exception as e:
-        msg = f"  [X] 投稿失敗: {type(e).__name__}: {e}"
-        resp = getattr(e, 'response', None)
-        if resp is not None:
-            try:
-                msg += f" | status={resp.status_code} body={resp.text[:400]}"
-            except Exception:
-                pass
-        codes = getattr(e, 'api_codes', None)
-        msgs = getattr(e, 'api_messages', None)
-        if codes:
-            msg += f" | api_codes={codes} api_messages={msgs}"
-        print(msg)
+        print(f"  [X] 投稿失敗: {type(e).__name__}: {e}")
         return None
 
 
