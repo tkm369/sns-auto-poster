@@ -38,10 +38,10 @@ jobs:
       - name: トレンドキーワードを取得
         run: cd sns_auto_poster && python -c "from trends import fetch_and_save_trends; fetch_and_save_trends()"
 
-      - name: 実績ログ・トレンドキャッシュをコミット
+      - name: 実績ログ・トレンド・ハッシュタグ統計をコミット
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add sns_auto_poster/posts_log.json sns_auto_poster/trends_cache.json
+          git add sns_auto_poster/posts_log.json sns_auto_poster/trends_cache.json sns_auto_poster/hashtag_stats.json sns_auto_poster/reference_posts.json
           git diff --staged --quiet || git commit -m "chore: 実績データ・トレンド更新 [skip ci]"
           git push

@@ -14,5 +14,7 @@ THREADS_ACCESS_TOKEN = os.getenv("THREADS_ACCESS_TOKEN", "")
 THREADS_USER_ID = os.getenv("THREADS_USER_ID", "")
 
 # === アフィリエイト設定 ===
-AFFILIATE_LINK = os.getenv("AFFILIATE_LINK", "")  # 空のまま = アフィリなしモード
+_raw_affiliate = os.getenv("AFFILIATE_LINK", "").strip()
+# http(s)で始まる正規のURLでなければ無効とみなす
+AFFILIATE_LINK = _raw_affiliate if _raw_affiliate.startswith("http") else ""
 AFFILIATE_TEXT = "🔮 詳しい鑑定はこちら →"

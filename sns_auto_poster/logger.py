@@ -21,7 +21,7 @@ def save_log(log):
     with open(LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(log, f, ensure_ascii=False, indent=2)
 
-def add_post(post_id, platform, content, time_slot, has_affiliate=False):
+def add_post(post_id, platform, content, time_slot, has_affiliate=False, has_image=False):
     log = load_log()
     jst = pytz.timezone("Asia/Tokyo")
     entry = {
@@ -31,6 +31,7 @@ def add_post(post_id, platform, content, time_slot, has_affiliate=False):
         "content": content,
         "time_slot": time_slot,
         "has_affiliate": has_affiliate,
+        "has_image": has_image,
         "metrics": None,
         "metrics_collected": False
     }
@@ -38,14 +39,16 @@ def add_post(post_id, platform, content, time_slot, has_affiliate=False):
     save_log(log)
 
 def count_posts_today():
-    """今日すでに投稿した回数（X投稿をラン数として使用）"""
+    """今日すでに投稿した回数（time_slot単位でカウント、プラットフォーム問わず）"""
     log = load_log()
     jst = pytz.timezone("Asia/Tokyo")
     today = datetime.now(jst).strftime("%Y-%m-%d")
-    return sum(
-        1 for p in log
-        if p.get("platform") == "x" and p.get("timestamp", "").startswith(today)
-    )
+    seen_slots = set()
+    for p in log:
+        if p.get("timestamp", "").startswith(today):
+            key = p.get("time_slot") or p.get("timestamp", "")[:16]
+            seen_slots.add(key)
+    return len(seen_slots)
 
 
 def get_time_slot_stats():
@@ -68,6 +71,34 @@ def get_time_slot_stats():
 def get_time_slot_performance():
     """時間帯別の平均エンゲージメント率を返す {slot: avg_rate}（後方互換）"""
     return {slot: s["avg_rate"] for slot, s in get_time_slot_stats().items()}
+
+
+def get_image_vs_text_stats():
+    """画像あり/なし別の平均エンゲージメント率を返す
+    Returns: {"image": {"avg_rate": float, "count": int}, "text": {...}}
+    """
+    log = load_log()
+    image_rates, text_rates = [], []
+    for p in log:
+        if not p.get("metrics_collected") or not p.get("metrics"):
+            continue
+        if p.get("platform") != "threads":
+            continue
+        rate = p["metrics"].get("engagement_rate", 0)
+        if p.get("has_image"):
+            image_rates.append(rate)
+        else:
+            text_rates.append(rate)
+    return {
+        "image": {
+            "avg_rate": sum(image_rates) / len(image_rates) if image_rates else 0,
+            "count": len(image_rates),
+        },
+        "text": {
+            "avg_rate": sum(text_rates) / len(text_rates) if text_rates else 0,
+            "count": len(text_rates),
+        },
+    }
 
 
 def get_top_posts(n=3, has_affiliate=False):

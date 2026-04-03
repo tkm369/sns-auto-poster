@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from datetime import datetime
 import pytz
@@ -8,6 +9,31 @@ from logger import get_top_posts, get_time_slot_performance
 from trends import load_trends
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+
+def _load_reference_posts():
+    """ユーザーが手動で追加した参考投稿を読み込む"""
+    path = os.path.join(os.path.dirname(__file__), "reference_posts.json")
+    if not os.path.exists(path):
+        return []
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return [p for p in data if isinstance(p, str) and p.strip()]
+    except Exception:
+        return []
+
+
+def _load_hashtag_stats():
+    """ハッシュタグ実績データを読み込む"""
+    path = os.path.join(os.path.dirname(__file__), "hashtag_stats.json")
+    if not os.path.exists(path):
+        return {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
 MODEL = "gemini-2.5-flash"
 # Free tier: 5 RPM → 12秒以上の間隔を空ける
 _CALL_INTERVAL = 13  # seconds between API calls
@@ -70,6 +96,16 @@ def generate_and_score_posts(platform="x", top_posts=None):
     time_slot, theme = get_time_theme()
     max_chars = 240 if platform == "x" else 450
 
+    # 参考投稿（ユーザー手動追加）
+    reference_posts = _load_reference_posts()
+    reference_section = ""
+    if reference_posts:
+        lines = ["【参考：他の人気投稿（書き出し・構成・トーンを学習すること）】"]
+        for p in reference_posts:
+            lines.append(f"---\n{p[:200]}")
+        lines.append("---\nこれらの投稿のリズム・言葉選び・構成を参考にしつつ、内容は独自のものにしてください。")
+        reference_section = "\n" + "\n".join(lines) + "\n"
+
     top_posts_section = ""
     if top_posts:
         lines = ["【参考：過去に高エンゲージメントを記録した投稿パターン】"]
@@ -97,6 +133,19 @@ def generate_and_score_posts(platform="x", top_posts=None):
                 lines.append(f"この時間帯（{time_slot}）のエンゲージを{best[0]}並みに引き上げるよう工夫してください。")
         time_perf_section = "\n" + "\n".join(lines) + "\n"
 
+    # ハッシュタグ実績注入
+    hashtag_stats = _load_hashtag_stats()
+    hashtag_section = ""
+    if hashtag_stats:
+        top_tags = [(t, v) for t, v in list(hashtag_stats.items())[:10]
+                    if v.get("count", 0) >= 2]
+        if top_tags:
+            lines = ["【実績データに基づく効果的なハッシュタグ（エンゲージ率順）】"]
+            for tag, v in top_tags[:8]:
+                lines.append(f"  {tag}: 平均 {v['avg_rate']:.2%} (n={v['count']})")
+            lines.append("→ これらのタグを優先使用し、実績のないタグは減らしてください。")
+            hashtag_section = "\n" + "\n".join(lines) + "\n"
+
     # トレンド注入
     trends = load_trends()
     trends_section = ""
@@ -116,7 +165,7 @@ def generate_and_score_posts(platform="x", top_posts=None):
 
     prompt = f"""あなたはフォロワーを惹きつける人気SNS占い師です。
 「{theme}」というテーマで、{platform}用の投稿を3案作成し、各案のエンゲージメントスコア(0-100)を付けてください。
-{top_posts_section}{time_perf_section}{trends_section}
+{reference_section}{top_posts_section}{time_perf_section}{hashtag_section}{trends_section}
 【投稿必須条件】
 - 占い・スピリチュアル・恋愛運に関する内容
 - 1行目で読者がスクロールを止めるような「フック」を入れる
@@ -124,7 +173,7 @@ def generate_and_score_posts(platform="x", top_posts=None):
 {cta_instruction}
 - {max_chars}文字以内
 - 絵文字を効果的に使う（多すぎない）
-- ハッシュタグを末尾に4〜6個（#占い #恋愛運 #スピリチュアル #開運 など）
+- ハッシュタグは一切入れない
 
 【NG条件（必ず守ること）】
 - 実在の芸能人・著名人・一般人の名前を出さない
@@ -149,11 +198,11 @@ def generate_and_score_posts(platform="x", top_posts=None):
         best_score = results[0].get("score", 50)
         best_post = results[0].get("post", "")
         print(f"  [{platform}] 最高スコア: {best_score}/100")
-        return best_post
+        return best_post, best_score
     except Exception:
         # JSON解析失敗時は生テキストをそのまま使う
         print(f"  [{platform}] スコアリング解析失敗、生テキスト使用")
-        return text
+        return text, 50
 
 
 def improve_post(post, platform="x"):
@@ -172,7 +221,7 @@ def improve_post(post, platform="x"):
 - 中間部分に「共感→希望」の流れを作る
 {cta_improve}
 - {max_chars}文字以内に必ず収める
-- ハッシュタグは末尾にまとめる
+- ハッシュタグは一切入れない
 
 【元の投稿】
 {post}
@@ -191,9 +240,9 @@ def get_best_post(platform="x"):
     print(f"  [{platform}] 投稿案を生成・スコアリング中...")
 
     top_posts = get_top_posts(n=3, has_affiliate=bool(AFFILIATE_LINK))
-    best_post = generate_and_score_posts(platform, top_posts=top_posts)
+    best_post, score = generate_and_score_posts(platform, top_posts=top_posts)
 
     print(f"  [{platform}] 投稿を改善中...")
     final_post = improve_post(best_post, platform)
 
-    return final_post
+    return final_post, score

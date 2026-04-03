@@ -22,12 +22,29 @@ jobs:
         with:
           python-version: '3.11'
 
+      - name: 日本語フォントをインストール
+        run: sudo apt-get install -y fonts-noto-cjk
+
       - name: 依存ライブラリをインストール
         run: pip install -r sns_auto_poster/requirements.txt
 
-      - name: 自動投稿を実行
+      - name: 投稿コンテンツ・画像を生成
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          AFFILIATE_LINK: ${{ secrets.AFFILIATE_LINK }}
+          THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+        run: cd sns_auto_poster && python main.py --mode=generate
+
+      - name: 生成画像・pending_post をコミット（投稿前にURLを確定させる）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add sns_auto_poster/generated_images/ sns_auto_poster/pending_post.json
+          git diff --staged --quiet || git commit -m "chore: auto queue update [skip ci]"
+          git push
+
+      - name: 投稿を実行
+        env:
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
@@ -35,7 +52,9 @@ jobs:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
           AFFILIATE_LINK: ${{ secrets.AFFILIATE_LINK }}
-        run: cd sns_auto_poster && python main.py
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+        run: cd sns_auto_poster && python main.py --mode=post
 
       - name: 投稿ログをコミット
         run: |
