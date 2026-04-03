@@ -24,18 +24,9 @@ def post_to_x(text):
         print(f"  [X] 投稿成功 → https://x.com/i/web/status/{tweet_id}")
         return tweet_id
     except Exception as e:
-        err_detail = str(e)
-        for attr in ('api_codes', 'api_messages', 'response'):
-            val = getattr(e, attr, None)
-            if val is not None:
-                try:
-                    if attr == 'response':
-                        err_detail += f" | http_body: {val.text[:300]}"
-                    else:
-                        err_detail += f" | {attr}: {val}"
-                except Exception:
-                    pass
-        print(f"  [X] 投稿失敗: {err_detail}")
+        import traceback
+        print(f"  [X] 投稿失敗: {type(e).__name__}: {e}")
+        traceback.print_exc()
         return None
 
 
