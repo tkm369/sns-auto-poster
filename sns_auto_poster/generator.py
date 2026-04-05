@@ -8,7 +8,13 @@ from config import GEMINI_API_KEY, AFFILIATE_LINK, AFFILIATE_TEXT
 from logger import get_top_posts, get_time_slot_performance
 from trends import load_trends
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+_client = None
+
+def _get_client():
+    global _client
+    if _client is None:
+        _client = genai.Client(api_key=GEMINI_API_KEY)
+    return _client
 
 
 def _load_reference_posts():
@@ -44,7 +50,7 @@ def _generate(prompt, max_retries=3):
     time.sleep(_CALL_INTERVAL)
     for attempt in range(max_retries):
         try:
-            response = client.models.generate_content(model=MODEL, contents=prompt)
+            response = _get_client().models.generate_content(model=MODEL, contents=prompt)
             return response.text.strip()
         except Exception as e:
             err_str = str(e)
