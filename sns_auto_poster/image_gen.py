@@ -89,6 +89,7 @@ AI_STYLES = {
 }
 
 ALL_STYLES = list(GRADIENT_STYLES.keys()) + list(AI_STYLES.keys())
+STYLES = {**GRADIENT_STYLES, **AI_STYLES}  # 全スタイルを統合した辞書
 
 # ─── コンテンツパターン ────────────────────────────────────
 CONTENT_PATTERNS = {
