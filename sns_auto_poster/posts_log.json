@@ -313,8 +313,15 @@
     "time_slot": "10",
     "has_affiliate": false,
     "has_image": false,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 4,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   },
   {
     "id": "18125496058582066",
@@ -324,8 +331,15 @@
     "time_slot": "14",
     "has_affiliate": false,
     "has_image": false,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 0,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   },
   {
     "id": "18087566633586316",
@@ -335,8 +349,15 @@
     "time_slot": "16",
     "has_affiliate": false,
     "has_image": true,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 19,
+      "likes": 1,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0526
+    },
+    "metrics_collected": true
   },
   {
     "id": "18063136718340540",
@@ -346,8 +367,15 @@
     "time_slot": "20",
     "has_affiliate": false,
     "has_image": true,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 5,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   },
   {
     "id": "18575523526014381",
@@ -357,8 +385,15 @@
     "time_slot": "22",
     "has_affiliate": false,
     "has_image": false,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 2,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   },
   {
     "id": "18396949426145727",
