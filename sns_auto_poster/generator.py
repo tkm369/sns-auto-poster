@@ -97,10 +97,15 @@ def get_time_theme():
     return slot_key, theme
 
 
-def generate_and_score_posts(platform="x", top_posts=None):
+def generate_and_score_posts(platform="x", top_posts=None, target_chars=None):
     """3つの投稿案を生成してスコアリングも一回のAPI呼び出しで行う"""
     time_slot, theme = get_time_theme()
-    max_chars = 240 if platform == "x" else 400
+    if platform == "x":
+        max_chars = 240
+    elif target_chars:
+        max_chars = target_chars
+    else:
+        max_chars = 400
 
     # 参考投稿（ユーザー手動追加）
     reference_posts = _load_reference_posts()
@@ -211,9 +216,14 @@ def generate_and_score_posts(platform="x", top_posts=None):
         return text, 50
 
 
-def improve_post(post, platform="x"):
+def improve_post(post, platform="x", target_chars=None):
     """最高スコア投稿をさらに磨く"""
-    max_chars = 240 if platform == "x" else 400
+    if platform == "x":
+        max_chars = 240
+    elif target_chars:
+        max_chars = target_chars
+    else:
+        max_chars = 400
 
     if AFFILIATE_LINK:
         cta_improve = "- CTAのアフィリリンクへの誘導をより自然で背中を押す表現にする"
@@ -241,14 +251,14 @@ def improve_post(post, platform="x"):
     return _generate(prompt)
 
 
-def get_best_post(platform="x"):
+def get_best_post(platform="x", target_chars=None):
     """生成→スコアリング→改善の全フローを実行（API呼び出し2回）"""
     print(f"  [{platform}] 投稿案を生成・スコアリング中...")
 
     top_posts = get_top_posts(n=3, has_affiliate=bool(AFFILIATE_LINK))
-    best_post, score = generate_and_score_posts(platform, top_posts=top_posts)
+    best_post, score = generate_and_score_posts(platform, top_posts=top_posts, target_chars=target_chars)
 
     print(f"  [{platform}] 投稿を改善中...")
-    final_post = improve_post(best_post, platform)
+    final_post = improve_post(best_post, platform, target_chars=target_chars)
 
     return final_post, score

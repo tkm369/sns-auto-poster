@@ -7,7 +7,7 @@ import pytz
 
 from generator import get_best_post, get_time_theme
 from poster import post_to_x, post_to_threads
-from logger import add_post, count_posts_today, get_time_slot_stats, get_image_vs_text_stats
+from logger import add_post, count_posts_today, get_time_slot_stats, get_image_vs_text_stats, get_length_stats
 from config import AFFILIATE_LINK
 
 MAX_POSTS_PER_DAY = 6
@@ -44,6 +44,53 @@ def should_post_now(time_slot):
     else:
         return False, (f"スロット {time_slot}: エンゲージ {slot_stat['avg_rate']:.2%} "
                        f"< 閾値 {threshold:.2%}（低パフォーマンス・スキップ）")
+
+
+# 文字数カテゴリ定義
+LENGTH_CATEGORIES = {
+    "short":  80,   # ~80文字
+    "medium": 200,  # ~200文字
+    "long":   380,  # ~380文字
+}
+
+
+def decide_post_length():
+    """文字数カテゴリをエンゲージデータで判断する
+    - データ不足: 均等ローテーション（探索）
+    - データあり: 勝者60%、2位30%、3位10%
+    Returns: (category_name, target_chars)
+    """
+    stats = get_length_stats()
+    cats = list(LENGTH_CATEGORIES.keys())
+
+    all_ready = all(stats.get(c, {}).get("count", 0) >= AB_MIN_SAMPLES for c in cats)
+
+    if not all_ready:
+        # 探索フェーズ: データが少ないカテゴリを優先的に選ぶ
+        counts = {c: stats.get(c, {}).get("count", 0) for c in cats}
+        least = min(cats, key=lambda c: counts[c])
+        reason = (f"文字数探索中 (短:{counts['short']}件 中:{counts['medium']}件 長:{counts['long']}件) "
+                  f"→ {least}")
+        chosen = least
+    else:
+        # 成熟フェーズ: 上位優遇
+        sorted_cats = sorted(cats, key=lambda c: stats[c]["avg_rate"], reverse=True)
+        weights = [0.60, 0.30, 0.10]
+        r = random.random()
+        cumulative = 0
+        chosen = sorted_cats[0]
+        for cat, w in zip(sorted_cats, weights):
+            cumulative += w
+            if r < cumulative:
+                chosen = cat
+                break
+        rates = {c: stats[c]["avg_rate"] for c in cats}
+        reason = (f"文字数成熟 (短:{rates['short']:.2%} 中:{rates['medium']:.2%} 長:{rates['long']:.2%}) "
+                  f"→ {chosen}")
+
+    target = LENGTH_CATEGORIES[chosen]
+    print(f"  [A/B] {reason} ({target}文字目標)")
+    return chosen, target
 
 
 def decide_use_image():
@@ -107,8 +154,11 @@ def generate_mode():
         return
 
     print("\n【投稿生成】")
+    # 文字数A/Bテスト
+    length_category, target_chars = decide_post_length()
+
     try:
-        post_content, score = get_best_post(platform="threads")
+        post_content, score = get_best_post(platform="threads", target_chars=target_chars)
     except Exception as e:
         err_str = str(e)
         if "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower() or "429" in err_str:
@@ -159,6 +209,7 @@ def generate_mode():
         "time_slot": time_slot,
         "image_filename": image_filename,
         "image_url": image_url,
+        "length_category": length_category,
     })
     print(f"  pending_post.json を保存しました")
 
@@ -198,10 +249,11 @@ def post_mode():
     # ログ記録
     has_affiliate = bool(AFFILIATE_LINK)
     has_image = bool(image_filename)
+    length_category = pending.get("length_category")
     if x_id:
-        add_post(x_id, "x", post_content, time_slot, has_affiliate=has_affiliate, has_image=has_image)
+        add_post(x_id, "x", post_content, time_slot, has_affiliate=has_affiliate, has_image=has_image, length_category=length_category)
     if threads_id:
-        add_post(threads_id, "threads", post_content, time_slot, has_affiliate=has_affiliate, has_image=has_image)
+        add_post(threads_id, "threads", post_content, time_slot, has_affiliate=has_affiliate, has_image=has_image, length_category=length_category)
 
     # 古い画像を削除
     try:

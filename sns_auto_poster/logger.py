@@ -21,7 +21,7 @@ def save_log(log):
     with open(LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(log, f, ensure_ascii=False, indent=2)
 
-def add_post(post_id, platform, content, time_slot, has_affiliate=False, has_image=False):
+def add_post(post_id, platform, content, time_slot, has_affiliate=False, has_image=False, length_category=None):
     log = load_log()
     jst = pytz.timezone("Asia/Tokyo")
     entry = {
@@ -32,6 +32,7 @@ def add_post(post_id, platform, content, time_slot, has_affiliate=False, has_ima
         "time_slot": time_slot,
         "has_affiliate": has_affiliate,
         "has_image": has_image,
+        "length_category": length_category,
         "metrics": None,
         "metrics_collected": False
     }
@@ -71,6 +72,27 @@ def get_time_slot_stats():
 def get_time_slot_performance():
     """時間帯別の平均エンゲージメント率を返す {slot: avg_rate}（後方互換）"""
     return {slot: s["avg_rate"] for slot, s in get_time_slot_stats().items()}
+
+
+def get_length_stats():
+    """投稿の長さカテゴリ別エンゲージメント率を返す
+    Returns: {"short": {"avg_rate": float, "count": int}, "medium": ..., "long": ...}
+    """
+    log = load_log()
+    data = {"short": [], "medium": [], "long": []}
+    for p in log:
+        if not p.get("metrics_collected") or not p.get("metrics"):
+            continue
+        if p.get("platform") != "threads":
+            continue
+        rate = p["metrics"].get("engagement_rate", 0)
+        cat = p.get("length_category")
+        if cat in data:
+            data[cat].append(rate)
+    return {
+        cat: {"avg_rate": sum(r) / len(r) if r else 0, "count": len(r)}
+        for cat, r in data.items()
+    }
 
 
 def get_image_vs_text_stats():
