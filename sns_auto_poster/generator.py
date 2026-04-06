@@ -100,7 +100,7 @@ def get_time_theme():
 def generate_and_score_posts(platform="x", top_posts=None):
     """3つの投稿案を生成してスコアリングも一回のAPI呼び出しで行う"""
     time_slot, theme = get_time_theme()
-    max_chars = 240 if platform == "x" else 450
+    max_chars = 240 if platform == "x" else 400
 
     # 参考投稿（ユーザー手動追加）
     reference_posts = _load_reference_posts()
@@ -213,7 +213,7 @@ def generate_and_score_posts(platform="x", top_posts=None):
 
 def improve_post(post, platform="x"):
     """最高スコア投稿をさらに磨く"""
-    max_chars = 240 if platform == "x" else 450
+    max_chars = 240 if platform == "x" else 400
 
     if AFFILIATE_LINK:
         cta_improve = "- CTAのアフィリリンクへの誘導をより自然で背中を押す表現にする"

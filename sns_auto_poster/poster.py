@@ -28,7 +28,13 @@ def post_to_x(text):
         return None
 
 
+THREADS_MAX_CHARS = 500
+
 def post_to_threads(text, image_url=None):
+    # Threads APIの上限を超えていたら切り詰め
+    if len(text) > THREADS_MAX_CHARS:
+        print(f"  ⚠️ テキスト{len(text)}文字 → {THREADS_MAX_CHARS}文字に切り詰め")
+        text = text[:THREADS_MAX_CHARS - 1] + "…"
     """Threadsに投稿する（テキストのみ or 画像付き）"""
     if not all([THREADS_ACCESS_TOKEN, THREADS_USER_ID]):
         print("  [Threads] APIキーが未設定のためスキップ")
