@@ -128,9 +128,10 @@ def generate_mode():
     use_image = decide_use_image()
 
     image_filename = None
+    image_url = None
     if use_image:
         try:
-            from image_gen import create_fortune_image
+            from image_gen import create_fortune_image, upload_image
             os.makedirs(IMAGES_DIR, exist_ok=True)
             jst = pytz.timezone("Asia/Tokyo")
             ts = datetime.now(jst).strftime("%Y%m%d_%H%M%S")
@@ -138,9 +139,16 @@ def generate_mode():
             image_path = os.path.join(IMAGES_DIR, image_filename)
             create_fortune_image(post_content, image_path)
             print(f"  画像生成: {image_filename}")
+            image_url = upload_image(image_path)
+            if image_url:
+                print(f"  画像URL: {image_url}")
+            else:
+                print(f"  ⚠️ アップロード失敗 → テキスト投稿に変更")
+                image_filename = None
         except Exception as e:
             print(f"  ⚠️ 画像生成失敗 (テキスト投稿に変更): {e}")
             image_filename = None
+            image_url = None
     else:
         print(f"  テキストのみで投稿")
 
@@ -150,6 +158,7 @@ def generate_mode():
         "score": score,
         "time_slot": time_slot,
         "image_filename": image_filename,
+        "image_url": image_url,
     })
     print(f"  pending_post.json を保存しました")
 
@@ -174,17 +183,10 @@ def post_mode():
     post_content = pending["content"]
     time_slot = pending["time_slot"]
     image_filename = pending.get("image_filename")
+    image_url = pending.get("image_url")  # catbox.moe にアップロード済みURL
 
-    # 画像URL構築（GitHub Actions環境変数から）
-    image_url = None
-    if image_filename:
-        github_repo = os.getenv("GITHUB_REPOSITORY", "")
-        github_branch = os.getenv("GITHUB_REF_NAME", "master")
-        if github_repo:
-            image_url = (f"https://raw.githubusercontent.com/"
-                         f"{github_repo}/{github_branch}/"
-                         f"sns_auto_poster/generated_images/{image_filename}")
-            print(f"  画像URL: {image_url}")
+    if image_url:
+        print(f"  画像URL: {image_url}")
 
     print(f"\n--- 投稿内容 ---\n{post_content}\n")
 

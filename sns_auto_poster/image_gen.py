@@ -134,6 +134,27 @@ def create_fortune_image(post_text, output_path):
     return output_path
 
 
+def upload_image(image_path):
+    """catbox.moe（無料CDN）に画像をアップロードしてURLを返す"""
+    import requests
+    try:
+        with open(image_path, "rb") as f:
+            res = requests.post(
+                "https://catbox.moe/user/api.php",
+                data={"reqtype": "fileupload"},
+                files={"fileToUpload": ("image.png", f, "image/png")},
+                timeout=30,
+            )
+        url = res.text.strip()
+        if res.status_code == 200 and url.startswith("https://"):
+            return url
+        print(f"  ⚠️ catbox.moe アップロード失敗: {res.text[:100]}")
+        return None
+    except Exception as e:
+        print(f"  ⚠️ 画像アップロード失敗: {e}")
+        return None
+
+
 def cleanup_old_images(images_dir, keep_days=7):
     """指定日数より古い画像を削除"""
     if not os.path.exists(images_dir):

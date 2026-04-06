@@ -52,8 +52,6 @@ jobs:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
           AFFILIATE_LINK: ${{ secrets.AFFILIATE_LINK }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          GITHUB_REF_NAME: ${{ github.ref_name }}
         run: cd sns_auto_poster && python main.py --mode=post
 
       - name: 投稿ログをコミット
