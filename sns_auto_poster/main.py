@@ -232,6 +232,10 @@ def generate_mode():
             return
         raise
 
+    # Geminiが0-10スケールで返した場合は0-100に正規化
+    if isinstance(score, (int, float)) and score <= 10:
+        score = round(score * 10, 1)
+
     if score < SCORE_THRESHOLD:
         print(f"  スコア {score} < 閾値 {SCORE_THRESHOLD}、品質不足につきスキップ")
         _save_pending({"skip": True, "reason": f"score {score} < threshold {SCORE_THRESHOLD}"})
