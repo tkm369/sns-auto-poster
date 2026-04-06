@@ -403,8 +403,15 @@
     "time_slot": "02",
     "has_affiliate": false,
     "has_image": true,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 7,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   },
   {
     "id": "17892769188442913",
@@ -414,8 +421,15 @@
     "time_slot": "04",
     "has_affiliate": false,
     "has_image": true,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 79,
+      "likes": 4,
+      "replies": 1,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0633
+    },
+    "metrics_collected": true
   },
   {
     "id": "18072203033245105",
@@ -425,8 +439,15 @@
     "time_slot": "06",
     "has_affiliate": false,
     "has_image": true,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 55,
+      "likes": 2,
+      "replies": 2,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0727
+    },
+    "metrics_collected": true
   },
   {
     "id": "17968379565025109",
@@ -436,8 +457,15 @@
     "time_slot": "08",
     "has_affiliate": false,
     "has_image": false,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 1,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   },
   {
     "id": "18206771632335880",
@@ -447,8 +475,15 @@
     "time_slot": "14",
     "has_affiliate": false,
     "has_image": true,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 8,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   },
   {
     "id": "18085026887201552",
@@ -458,7 +493,14 @@
     "time_slot": "18",
     "has_affiliate": false,
     "has_image": false,
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 1,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   }
 ]
