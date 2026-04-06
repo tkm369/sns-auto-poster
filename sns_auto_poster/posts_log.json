@@ -535,8 +535,15 @@
     "image_style": null,
     "image_content_pattern": null,
     "length_category": "short",
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 205,
+      "likes": 3,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0146
+    },
+    "metrics_collected": true
   },
   {
     "id": "18104456773731308",
