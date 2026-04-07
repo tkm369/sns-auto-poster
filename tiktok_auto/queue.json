@@ -1,45 +1,5 @@
 [
   {
-    "url": "https://www.threads.com/@spri_nrin/post/DWnFKbCmP23",
-    "caption_override": "",
-    "added_at": "2026-04-02T10:55:00",
-    "status": "done",
-    "processed_at": "2026-04-02T18:40:59.692394"
-  },
-  {
-    "url": "https://www.threads.com/@spri_nrin/post/DWqSHfckUX0",
-    "caption_override": "",
-    "added_at": "2026-04-03T17:36:20.673305",
-    "status": "done",
-    "processed_at": "2026-04-03T17:39:03.623353"
-  },
-  {
-    "url": "https://www.threads.com/@spri_nrin/post/DWqRrVDFEhH",
-    "caption_override": "",
-    "added_at": "2026-04-03T17:36:20.673305",
-    "status": "failed",
-    "processed_at": "2026-04-03T21:02:17.079093",
-    "fail_count": 2
-  },
-  {
-    "url": "https://www.threads.com/@spri_nrin/post/DWqQVxvEc1q",
-    "caption_override": "",
-    "added_at": "2026-04-03T17:36:20.673305",
-    "status": "pending"
-  },
-  {
-    "url": "https://www.threads.com/@spri_nrin/post/DWqQCielRnZ",
-    "caption_override": "",
-    "added_at": "2026-04-03T17:36:20.674306",
-    "status": "pending"
-  },
-  {
-    "url": "https://www.threads.com/@spri_nrin/post/DWqPrzLlRFg",
-    "caption_override": "",
-    "added_at": "2026-04-03T17:36:20.674306",
-    "status": "pending"
-  },
-  {
     "url": "https://www.threads.net/post/DWpcBqok_HZ",
     "caption_override": "",
     "added_at": "2026-04-04T07:54:38.006410",
