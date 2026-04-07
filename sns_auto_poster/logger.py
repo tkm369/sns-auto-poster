@@ -21,7 +21,13 @@ def save_log(log):
     with open(LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(log, f, ensure_ascii=False, indent=2)
 
-def add_post(post_id, platform, content, time_slot, has_affiliate=False, has_image=False, length_category=None, image_style=None, image_content_pattern=None):
+def add_post(post_id, platform, content, time_slot, has_affiliate=False, has_image=False,
+             length_category=None, image_style=None, image_content_pattern=None,
+             post_type=None, pure_image_style=None):
+    """
+    post_type: "text_only" | "image_text" | "pure_image"
+    pure_image_style: PURE_IMAGE_STYLES のキー（pure_image 時のみ）
+    """
     log = load_log()
     jst = pytz.timezone("Asia/Tokyo")
     entry = {
@@ -35,6 +41,8 @@ def add_post(post_id, platform, content, time_slot, has_affiliate=False, has_ima
         "image_style": image_style,
         "image_content_pattern": image_content_pattern,
         "length_category": length_category,
+        "post_type": post_type,
+        "pure_image_style": pure_image_style,
         "metrics": None,
         "metrics_collected": False
     }
@@ -177,6 +185,48 @@ def get_total_post_count():
     """累計投稿数を返す（テーマローテーション用）"""
     log = load_log()
     return len([p for p in log if p.get("platform") == "threads"])
+
+
+def get_post_type_stats():
+    """投稿タイプ別（text_only / image_text / pure_image）のエンゲージメント率を返す"""
+    log = load_log()
+    data = {"text_only": [], "image_text": [], "pure_image": []}
+    for p in log:
+        if not p.get("metrics_collected") or not p.get("metrics"):
+            continue
+        if p.get("platform") != "threads":
+            continue
+        rate = p["metrics"].get("engagement_rate", 0)
+        pt = p.get("post_type")
+        # 旧ログの後方互換: post_type未記録の場合は has_image で判定
+        if pt is None:
+            pt = "image_text" if p.get("has_image") else "text_only"
+        if pt in data:
+            data[pt].append(rate)
+    return {
+        t: {"avg_rate": sum(r) / len(r) if r else 0, "count": len(r)}
+        for t, r in data.items()
+    }
+
+
+def get_pure_image_style_stats():
+    """純粋画像スタイル別エンゲージメント率を返す"""
+    from image_gen import ALL_PURE_STYLES
+    log = load_log()
+    data = {s: [] for s in ALL_PURE_STYLES}
+    for p in log:
+        if not p.get("metrics_collected") or not p.get("metrics"):
+            continue
+        if p.get("platform") != "threads" or p.get("post_type") != "pure_image":
+            continue
+        rate = p["metrics"].get("engagement_rate", 0)
+        style = p.get("pure_image_style")
+        if style in data:
+            data[style].append(rate)
+    return {
+        s: {"avg_rate": sum(r) / len(r) if r else 0, "count": len(r)}
+        for s, r in data.items()
+    }
 
 
 def get_top_posts(n=3, has_affiliate=False):

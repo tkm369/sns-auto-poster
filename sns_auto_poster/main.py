@@ -7,7 +7,7 @@ import pytz
 
 from generator import get_best_post, get_time_theme
 from poster import post_to_x, post_to_threads
-from logger import add_post, count_posts_today, get_time_slot_stats, get_image_vs_text_stats, get_length_stats, get_image_style_stats, get_image_content_stats
+from logger import add_post, count_posts_today, get_time_slot_stats, get_image_vs_text_stats, get_length_stats, get_image_style_stats, get_image_content_stats, get_post_type_stats, get_pure_image_style_stats
 from config import AFFILIATE_LINK
 
 MAX_POSTS_PER_DAY = 6  # 上限（実際の当日投稿数は3〜6でランダム）
@@ -175,44 +175,70 @@ def decide_image_content():
         return chosen
 
 
-def decide_use_image():
-    """画像を使うかどうかをエンゲージデータで判断する
-    - データ不足: 50/50でランダム（A/B探索）
-    - データあり: 勝者を70%、敗者を30%の確率で選ぶ
+def decide_post_type():
+    """投稿タイプを3択で決める: text_only / image_text / pure_image
+    - 探索フェーズ（各タイプ AB_MIN_SAMPLES 未満）: 最も少ないタイプを優先
+    - 成熟フェーズ: エンゲージ率で重み付け (1位60% / 2位30% / 3位10%)
+    Returns: "text_only" | "image_text" | "pure_image"
     """
-    stats = get_image_vs_text_stats()
-    img = stats["image"]
-    txt = stats["text"]
+    POST_TYPES = ["text_only", "image_text", "pure_image"]
+    stats = get_post_type_stats()
+    weights_mature = [0.60, 0.30, 0.10]
 
-    img_ok = img["count"] >= AB_MIN_SAMPLES
-    txt_ok = txt["count"] >= AB_MIN_SAMPLES
+    all_ready = all(stats.get(t, {}).get("count", 0) >= AB_MIN_SAMPLES for t in POST_TYPES)
 
-    if not img_ok or not txt_ok:
-        # どちらかデータ不足 → 交互にA/Bテスト（50/50）
-        use_image = random.random() < 0.5
-        reason = (f"A/B探索中 (画像:{img['count']}件, テキスト:{txt['count']}件) "
-                  f"→ {'画像' if use_image else 'テキスト'}")
+    if not all_ready:
+        counts = {t: stats.get(t, {}).get("count", 0) for t in POST_TYPES}
+        chosen = min(POST_TYPES, key=lambda t: counts[t])
+        count_str = " ".join(f"{t}:{counts[t]}" for t in POST_TYPES)
+        print(f"  [A/B] 投稿タイプ探索中 ({count_str}) → {chosen}")
     else:
-        image_rate = img["avg_rate"]
-        text_rate = txt["avg_rate"]
-        if image_rate > text_rate * 1.1:
-            # 画像が10%以上上回る → 画像70%
-            use_image = random.random() < 0.70
-            reason = (f"画像優勢 ({image_rate:.2%} vs {text_rate:.2%}) "
-                      f"→ 画像70%ルール → {'画像' if use_image else 'テキスト'}")
-        elif text_rate > image_rate * 1.1:
-            # テキストが10%以上上回る → テキスト70%
-            use_image = random.random() < 0.30
-            reason = (f"テキスト優勢 ({text_rate:.2%} vs {image_rate:.2%}) "
-                      f"→ テキスト70%ルール → {'画像' if use_image else 'テキスト'}")
-        else:
-            # 差が小さい → 50/50継続
-            use_image = random.random() < 0.5
-            reason = (f"差なし (画像:{image_rate:.2%} vs テキスト:{text_rate:.2%}) "
-                      f"→ 50/50 → {'画像' if use_image else 'テキスト'}")
+        sorted_types = sorted(POST_TYPES, key=lambda t: stats[t]["avg_rate"], reverse=True)
+        r = random.random()
+        cumulative = 0
+        chosen = sorted_types[0]
+        for pt, w in zip(sorted_types, weights_mature):
+            cumulative += w
+            if r < cumulative:
+                chosen = pt
+                break
+        rates = {t: stats[t]["avg_rate"] for t in POST_TYPES}
+        rate_str = " ".join(f"{t}:{rates[t]:.2%}" for t in sorted_types)
+        print(f"  [A/B] 投稿タイプ成熟 ({rate_str}) → {chosen}")
 
-    print(f"  [A/B] {reason}")
-    return use_image
+    return chosen
+
+
+def decide_pure_image_style():
+    """純粋画像スタイルをエンゲージデータで決める
+    Returns: style_name (str) from ALL_PURE_STYLES
+    """
+    from image_gen import ALL_PURE_STYLES, PURE_IMAGE_STYLES
+    stats = get_pure_image_style_stats()
+    weights_mature = [0.60, 0.25, 0.10, 0.05]
+
+    all_ready = all(stats.get(s, {}).get("count", 0) >= AB_MIN_SAMPLES for s in ALL_PURE_STYLES)
+
+    if not all_ready:
+        least = min(ALL_PURE_STYLES, key=lambda s: stats.get(s, {}).get("count", 0))
+        counts = {s: stats.get(s, {}).get("count", 0) for s in ALL_PURE_STYLES}
+        count_str = " ".join(f"{s}:{counts[s]}" for s in ALL_PURE_STYLES)
+        print(f"  [A/B] 純粋画像スタイル探索中 ({count_str}) → {least}: {PURE_IMAGE_STYLES[least]['desc']}")
+        return least
+    else:
+        sorted_styles = sorted(ALL_PURE_STYLES, key=lambda s: stats[s]["avg_rate"], reverse=True)
+        r = random.random()
+        cumulative = 0
+        chosen = sorted_styles[0]
+        for style, w in zip(sorted_styles, weights_mature):
+            cumulative += w
+            if r < cumulative:
+                chosen = style
+                break
+        rates = {s: stats[s]["avg_rate"] for s in ALL_PURE_STYLES}
+        rate_str = " ".join(f"{s}:{rates[s]:.2%}" for s in sorted_styles[:4])
+        print(f"  [A/B] 純粋画像スタイル成熟 ({rate_str}) → {chosen}: {PURE_IMAGE_STYLES[chosen]['desc']}")
+        return chosen
 
 
 def _save_pending(data):
@@ -260,41 +286,71 @@ def generate_mode():
 
     print(f"\n--- 投稿内容 (スコア: {score}/100) ---\n{post_content}\n")
 
-    # 画像を使うか判断（A/Bテスト）
-    use_image = decide_use_image()
+    # 投稿タイプを3択で決める（A/Bテスト）
+    # text_only: テキストのみ
+    # image_text: テキスト焼き込み画像
+    # pure_image: テキストなしのスピリチュアル画像（キャプションは投稿本文）
+    post_type = decide_post_type()
 
     image_filename = None
     image_url = None
     image_style = None
     image_content_pattern = None
-    if use_image:
+    pure_image_style = None
+
+    if post_type in ("image_text", "pure_image"):
         try:
-            from image_gen import create_fortune_image, upload_image
-            image_style = decide_image_style()
-            image_content_pattern = decide_image_content()
-            os.makedirs(IMAGES_DIR, exist_ok=True)
             jst = pytz.timezone("Asia/Tokyo")
             ts = datetime.now(jst).strftime("%Y%m%d_%H%M%S")
-            image_filename = f"{ts}.png"
-            image_path = os.path.join(IMAGES_DIR, image_filename)
-            create_fortune_image(post_content, image_path,
-                                 style=image_style,
-                                 content_pattern=image_content_pattern)
-            print(f"  画像生成: {image_filename} (スタイル:{image_style} / コンテンツ:{image_content_pattern})")
-            image_url = upload_image(image_path)
-            if image_url:
-                print(f"  画像URL: {image_url}")
-            else:
-                print(f"  ⚠️ アップロード失敗 → テキスト投稿に変更")
+            os.makedirs(IMAGES_DIR, exist_ok=True)
+
+            if post_type == "image_text":
+                from image_gen import create_fortune_image, upload_image
+                image_style = decide_image_style()
+                image_content_pattern = decide_image_content()
+                image_filename = f"{ts}.png"
+                image_path = os.path.join(IMAGES_DIR, image_filename)
+                create_fortune_image(post_content, image_path,
+                                     style=image_style,
+                                     content_pattern=image_content_pattern)
+                print(f"  テキスト付き画像生成: {image_filename} (スタイル:{image_style} / コンテンツ:{image_content_pattern})")
+
+            else:  # pure_image
+                from image_gen import create_pure_image, upload_image
+                pure_image_style = decide_pure_image_style()
+                image_filename = f"{ts}_pure.png"
+                image_path = os.path.join(IMAGES_DIR, image_filename)
+                create_pure_image(image_path, style=pure_image_style)
+                print(f"  純粋スピ画像生成: {image_filename} (スタイル:{pure_image_style})")
+
+            # ── Gemini Vision 安全チェック（アップロード前） ──
+            from image_gen import check_image_safety, upload_image
+            if not check_image_safety(image_path):
+                print(f"  ⚠️ 安全チェックNG → テキスト投稿に変更")
+                post_type = "text_only"
                 image_filename = None
                 image_style = None
                 image_content_pattern = None
+                pure_image_style = None
+            else:
+                image_url = upload_image(image_path)
+                if image_url:
+                    print(f"  画像URL: {image_url}")
+                else:
+                    print(f"  ⚠️ アップロード失敗 → テキスト投稿に変更")
+                    post_type = "text_only"
+                    image_filename = None
+                    image_style = None
+                    image_content_pattern = None
+                    pure_image_style = None
         except Exception as e:
             print(f"  ⚠️ 画像生成失敗 (テキスト投稿に変更): {e}")
+            post_type = "text_only"
             image_filename = None
             image_url = None
             image_style = None
             image_content_pattern = None
+            pure_image_style = None
     else:
         print(f"  テキストのみで投稿")
 
@@ -308,6 +364,8 @@ def generate_mode():
         "image_style": image_style,
         "image_content_pattern": image_content_pattern,
         "length_category": length_category,
+        "post_type": post_type,
+        "pure_image_style": pure_image_style,
     })
     print(f"  pending_post.json を保存しました")
 
@@ -350,10 +408,21 @@ def post_mode():
     length_category = pending.get("length_category")
     image_style = pending.get("image_style")
     image_content_pattern = pending.get("image_content_pattern")
+    post_type = pending.get("post_type")
+    pure_image_style = pending.get("pure_image_style")
+    # 旧形式の pending_post.json との後方互換
+    if post_type is None:
+        post_type = "image_text" if has_image else "text_only"
     if x_id:
-        add_post(x_id, "x", post_content, time_slot, has_affiliate=has_affiliate, has_image=has_image, length_category=length_category, image_style=image_style, image_content_pattern=image_content_pattern)
+        add_post(x_id, "x", post_content, time_slot, has_affiliate=has_affiliate, has_image=has_image,
+                 length_category=length_category, image_style=image_style,
+                 image_content_pattern=image_content_pattern,
+                 post_type=post_type, pure_image_style=pure_image_style)
     if threads_id:
-        add_post(threads_id, "threads", post_content, time_slot, has_affiliate=has_affiliate, has_image=has_image, length_category=length_category, image_style=image_style, image_content_pattern=image_content_pattern)
+        add_post(threads_id, "threads", post_content, time_slot, has_affiliate=has_affiliate, has_image=has_image,
+                 length_category=length_category, image_style=image_style,
+                 image_content_pattern=image_content_pattern,
+                 post_type=post_type, pure_image_style=pure_image_style)
 
     # 古い画像を削除
     try:

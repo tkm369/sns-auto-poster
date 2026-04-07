@@ -3,6 +3,7 @@
 グラジェント4種 + Pollinations.ai AI生成4種 = 計8スタイルをA/Bテスト
 """
 import os
+import json
 import random
 import textwrap
 from io import BytesIO
@@ -64,7 +65,7 @@ GRADIENT_STYLES = {
 AI_STYLES = {
     "ai_goddess": {
         "desc": "女神・スピリチュアル女性（AI生成）",
-        "prompt": "beautiful ethereal goddess woman, spiritual golden purple glowing aura, mystical soft dreamy bokeh, high quality cinematic portrait, dark background, no text, no watermark",
+        "prompt": "beautiful fully clothed ethereal goddess woman, spiritual golden purple glowing aura, mystical soft dreamy bokeh, high quality cinematic portrait, dark background, safe for work, no text, no watermark",
         "overlay_opacity": 0.50,
         "text_color": (255, 248, 220), "accent_color": (255, 210, 90),
         "shadow_color": (0, 0, 0),
@@ -72,7 +73,7 @@ AI_STYLES = {
     },
     "ai_cosmic": {
         "desc": "宇宙・銀河（AI生成）",
-        "prompt": "cosmic galaxy nebula stars universe, deep purple blue violet, mystical spiritual beautiful, cinematic, no text, no watermark, high quality 8k",
+        "prompt": "cosmic galaxy nebula stars universe, deep purple blue violet, mystical spiritual beautiful, cinematic, safe for work, no text, no watermark, high quality 8k",
         "overlay_opacity": 0.45,
         "text_color": (220, 238, 255), "accent_color": (180, 205, 255),
         "shadow_color": (0, 0, 20),
@@ -80,7 +81,7 @@ AI_STYLES = {
     },
     "ai_nature": {
         "desc": "神秘的な森・自然（AI生成）",
-        "prompt": "sacred magical forest with divine golden light rays through trees, mystical ethereal nature, spiritual glowing atmosphere, beautiful cinematic, no text, no watermark",
+        "prompt": "sacred magical forest with divine golden light rays through trees, mystical ethereal nature, spiritual glowing atmosphere, beautiful cinematic, safe for work, no text, no watermark",
         "overlay_opacity": 0.52,
         "text_color": (245, 255, 235), "accent_color": (180, 240, 150),
         "shadow_color": (0, 15, 0),
@@ -88,7 +89,7 @@ AI_STYLES = {
     },
     "ai_emotional": {
         "desc": "エモい抽象アート（AI生成）",
-        "prompt": "emotional abstract watercolor art, soft dreamy romantic bokeh light, purple pink rose gold pastel gradient, aesthetic beautiful cinematic, no text, no watermark",
+        "prompt": "emotional abstract watercolor art, soft dreamy romantic bokeh light, purple pink rose gold pastel gradient, aesthetic beautiful cinematic, safe for work, no text, no watermark",
         "overlay_opacity": 0.48,
         "text_color": (255, 242, 248), "accent_color": (255, 185, 210),
         "shadow_color": (30, 0, 15),
@@ -98,6 +99,46 @@ AI_STYLES = {
 
 ALL_STYLES = list(GRADIENT_STYLES.keys()) + list(AI_STYLES.keys())
 STYLES = {**GRADIENT_STYLES, **AI_STYLES}
+
+# ─── 画像のみ投稿スタイル（テキスト重ねなし） ────────────
+# Pollinations.aiで高品質なスピリチュアル系画像を生成
+_SAFE_TAG = ", safe for work, family friendly, peaceful, no violence, no people, no text, no watermark"
+
+PURE_IMAGE_STYLES = {
+    "pure_shrine": {
+        "desc": "神社・鳥居・パワースポット",
+        "prompt": "ancient japanese torii gate shrine in mystical misty forest, sacred spiritual atmosphere, soft golden light rays, ultra realistic photographic, 8k cinematic" + _SAFE_TAG,
+    },
+    "pure_crystal": {
+        "desc": "水晶・クリスタル・開運グッズ",
+        "prompt": "glowing amethyst crystal cluster, purple golden magical light, mystical spiritual, dark elegant background, studio quality photorealistic 8k" + _SAFE_TAG,
+    },
+    "pure_moon": {
+        "desc": "満月・星空・月光",
+        "prompt": "stunning full moon over calm reflective lake, ethereal moonlight, stars scattered across dark sky, mystical peaceful spiritual atmosphere, photorealistic 8k cinematic" + _SAFE_TAG,
+    },
+    "pure_sakura": {
+        "desc": "桜・花びら・光",
+        "prompt": "magical cherry blossom petals falling in golden divine light, ethereal dreamy soft pink bokeh, spiritual healing atmosphere, photorealistic cinematic 8k" + _SAFE_TAG,
+    },
+    "pure_dragon": {
+        "desc": "龍・縁起・神獣",
+        "prompt": "majestic golden dragon emerging from sacred clouds, celestial divine energy, japanese spiritual art style, glowing ethereal, cinematic dramatic lighting, no blood, no violence" + _SAFE_TAG,
+    },
+    "pure_aurora": {
+        "desc": "オーロラ・天空",
+        "prompt": "breathtaking aurora borealis northern lights, vivid green purple dancing lights over snowy mountains, mystical cosmic spiritual, ultra photorealistic 8k" + _SAFE_TAG,
+    },
+    "pure_waterfall": {
+        "desc": "神秘的な滝・聖地",
+        "prompt": "sacred waterfall in ancient mystical forest, divine light rays through mist, spiritual healing energy, ultra realistic photographic, 8k cinematic" + _SAFE_TAG,
+    },
+    "pure_sunset_sea": {
+        "desc": "夕日・海・希望",
+        "prompt": "golden hour sunset over calm ocean, magical light reflecting on water, warm spiritual hopeful atmosphere, ultra photorealistic cinematic 8k" + _SAFE_TAG,
+    },
+}
+ALL_PURE_STYLES = list(PURE_IMAGE_STYLES.keys())
 
 # ─── コンテンツパターン ────────────────────────────────────
 CONTENT_PATTERNS = {
@@ -164,14 +205,30 @@ def _add_center_glow(img, glow_color):
     return Image.alpha_composite(img.convert("RGBA"), glow).convert("RGB")
 
 
+# ─── 安全フィルター ────────────────────────────────────────
+# Pollinations.ai に渡すネガティブプロンプト（必ず全リクエストに付加）
+_NEGATIVE_PROMPT = (
+    "nsfw, nudity, sexual content, adult content, explicit, "
+    "violence, blood, gore, weapon, injury, death, "
+    "hate speech, discrimination, disturbing, horror, "
+    "watermark, logo, text, signature"
+)
+
+
 def _fetch_ai_background(prompt, timeout=55):
-    """Pollinations.ai でAI背景画像を生成する（無料・APIキー不要）"""
+    """Pollinations.ai でAI背景画像を生成する（無料・APIキー不要）
+    ネガティブプロンプトで NSFW・暴力コンテンツを自動除外する。
+    """
     import requests
     from urllib.parse import quote
     seed = int(datetime.now().timestamp()) % 99999
-    encoded = quote(prompt)
+    # プロンプト末尾にも安全指定を付加（二重ガード）
+    safe_prompt = prompt.rstrip(", ") + ", safe for work, family friendly, no nsfw, no violence"
+    encoded = quote(safe_prompt)
+    neg_encoded = quote(_NEGATIVE_PROMPT)
     url = (f"https://image.pollinations.ai/prompt/{encoded}"
-           f"?width={SIZE}&height={SIZE}&nologo=true&seed={seed}&enhance=true")
+           f"?width={SIZE}&height={SIZE}&nologo=true&seed={seed}&enhance=true"
+           f"&negative_prompt={neg_encoded}&safe=true")
     try:
         res = requests.get(url, timeout=timeout)
         if res.status_code == 200 and len(res.content) > 10000:
@@ -180,6 +237,52 @@ def _fetch_ai_background(prompt, timeout=55):
     except Exception as e:
         print(f"  AI画像取得失敗: {e}")
     return None
+
+
+def check_image_safety(image_path):
+    """Gemini Vision で生成画像の安全性を確認する。
+    アダルト・暴力・グロテスク等が検出されたら False を返す。
+    APIキー未設定やエラー時は True（スキップ）として扱う。
+    """
+    try:
+        from config import GEMINI_API_KEY
+    except ImportError:
+        return True
+    if not GEMINI_API_KEY:
+        return True
+    try:
+        import time
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        with open(image_path, "rb") as f:
+            image_data = f.read()
+
+        safety_prompt = (
+            "この画像を確認してください。\n"
+            "以下のいずれかに該当する場合は「unsafe」とだけ返してください:\n"
+            "- 性的・アダルト・ヌードなコンテンツ\n"
+            "- 暴力・流血・残酷・グロテスクな描写\n"
+            "- ヘイトスピーチ・差別的・不快な内容\n"
+            "- その他 SNS 投稿として不適切な内容\n\n"
+            "問題がなければ「safe」とだけ返してください。"
+        )
+        time.sleep(13)  # Gemini 無料枠 5RPM 制限対策
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=[
+                types.Part.from_bytes(data=image_data, mime_type="image/png"),
+                safety_prompt,
+            ],
+        )
+        result = response.text.strip().lower()
+        is_safe = "unsafe" not in result
+        print(f"  [安全チェック] {'✅ safe' if is_safe else '❌ unsafe'} → {result[:40]}")
+        return is_safe
+    except Exception as e:
+        print(f"  [安全チェック] エラー（スキップ）: {e}")
+        return True  # エラー時は止めない
 
 
 def _apply_dark_overlay(img, opacity):
@@ -371,11 +474,12 @@ def build_dynamic_prompt(post_text, style_patterns):
 
 【条件】
 - Pollinations.ai（Stable Diffusion系）に渡す英語プロンプト
-- 人物を含む場合は美しい日本人女性または東洋系女性
+- 人物を含む場合は完全に服を着た美しい日本人女性または東洋系女性
 - テキストや文字は含めない（no text, no watermark必須）
 - 1080x1080の正方形に映える構図
 - 占い・スピリチュアル・恋愛の雰囲気に合うもの
 - 高品質・シネマティックな仕上がり
+- 【必須】safe for work, family friendly, no nsfw, no nudity, no violence, no blood を末尾に必ず含める
 
 プロンプト文字列のみ返してください（説明不要）:"""
 
@@ -479,6 +583,32 @@ def create_fortune_image(post_text, output_path,
     sub_font = _get_font(28)
     _draw_text_centered(draw, s["footer"], sub_font,
                         int(SIZE * 0.84), s["accent_color"], s["shadow_color"])
+
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    img.save(output_path, "PNG", optimize=True)
+    return output_path
+
+
+def create_pure_image(output_path, style=None):
+    """
+    テキスト重ねなしの純粋なスピリチュアル画像を生成する。
+    神社・水晶・満月・桜・龍・オーロラ・滝・夕日などのビジュアルのみ。
+    キャプションテキストは Threads 投稿本文に入れるだけで画像には含めない。
+    """
+    if style is None or style not in PURE_IMAGE_STYLES:
+        style = random.choice(ALL_PURE_STYLES)
+
+    s = PURE_IMAGE_STYLES[style]
+    print(f"  純粋スピ画像生成中... ({s['desc']})")
+
+    img = _fetch_ai_background(s["prompt"])
+    if img is None:
+        print(f"  AI画像取得失敗 → グラジェントフォールバック")
+        # フォールバック: 紫グラジェント（ボケ効果付き・テキストなし）
+        img = _make_gradient((45, 5, 80), (160, 30, 100))
+        seed = int(datetime.now().timestamp()) % 9999
+        img = _add_bokeh(img, (200, 100, 255), count=18, seed=seed)
+        img = _add_center_glow(img, (200, 100, 255))
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     img.save(output_path, "PNG", optimize=True)
