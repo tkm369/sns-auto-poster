@@ -44,11 +44,23 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: cd sns_auto_poster && python -c "from competitor_tracker import run; run()"
 
+      - name: 競合画像のスタイル分析（Gemini Vision）
+        env:
+          THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          cd sns_auto_poster && python -c "
+import json
+from style_analyzer import run as analyze_styles
+stats = json.load(open('account_stats.json', encoding='utf-8'))
+analyze_styles(stats.get('accounts', {}))
+"
+
       - name: 実績ログ・トレンド・ハッシュタグ統計をコミット
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add sns_auto_poster/posts_log.json sns_auto_poster/trends_cache.json sns_auto_poster/hashtag_stats.json sns_auto_poster/reference_posts.json sns_auto_poster/account_stats.json
+          git add sns_auto_poster/posts_log.json sns_auto_poster/trends_cache.json sns_auto_poster/hashtag_stats.json sns_auto_poster/reference_posts.json sns_auto_poster/account_stats.json sns_auto_poster/style_guide.json
           git diff --staged --quiet || git commit -m "chore: 実績データ・トレンド・競合学習データ更新 [skip ci]"
           git pull --rebase origin master
           git push

@@ -105,13 +105,20 @@ def decide_post_length():
 
 def decide_image_style():
     """画像スタイルをエンゲージデータで判断する
+    - style_guide.jsonがあれば競合分析結果を優先
     - データ不足: 未試験スタイルを優先（全スタイルを均等に探索）
     - データあり: 1位60% / 2位25% / 3位10% / 4位5%
     Returns: style_name (str)
     """
-    from image_gen import ALL_STYLES, STYLES
+    from image_gen import ALL_STYLES, STYLES, get_recommended_style
     stats = get_image_style_stats()
     weights_mature = [0.60, 0.25, 0.10, 0.05]
+
+    # 競合分析データがあれば推奨スタイルを70%の確率で使う
+    recommended = get_recommended_style()
+    if recommended and random.random() < 0.70:
+        print(f"  [スタイル] 競合分析推奨: {recommended} ({STYLES[recommended]['desc']})")
+        return recommended
 
     all_ready = all(stats.get(s, {}).get("count", 0) >= AB_MIN_SAMPLES for s in ALL_STYLES)
 

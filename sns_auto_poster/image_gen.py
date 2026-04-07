@@ -3,52 +3,60 @@
 グラジェント4種 + Pollinations.ai AI生成4種 = 計8スタイルをA/Bテスト
 """
 import os
+import random
 import textwrap
 from io import BytesIO
 from datetime import datetime, timedelta
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 SIZE = 1080
 
-FONT_PATHS = [
+FONT_PATHS_REGULAR = [
     "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Regular.otf",
     "C:/Windows/Fonts/meiryo.ttc",
-    "C:/Windows/Fonts/msgothic.ttc",
     "C:/Windows/Fonts/YuGothM.ttc",
+    "C:/Windows/Fonts/msgothic.ttc",
+]
+FONT_PATHS_BOLD = [
+    "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+    "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
+    "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+    "C:/Windows/Fonts/meiryob.ttc",
+    "C:/Windows/Fonts/YuGothB.ttc",
 ]
 
 # ─── グラジェントスタイル ────────────────────────────────
 GRADIENT_STYLES = {
     "gradient_purple": {
         "desc": "紫ピンクグラジェント",
-        "bg_top": (60, 10, 100), "bg_bottom": (180, 40, 110),
-        "text_color": (255, 255, 255), "accent_color": (255, 215, 90),
-        "shadow_color": (20, 5, 40),
-        "header": "今日のスピリチュアルメッセージ", "footer": "あなたへのメッセージ",
+        "bg_top": (45, 5, 80), "bg_bottom": (160, 30, 100),
+        "text_color": (255, 255, 255), "accent_color": (255, 210, 80),
+        "glow_color": (200, 100, 255), "shadow_color": (10, 0, 30),
+        "header": "今日のスピリチュアルメッセージ", "footer": "✦ あなたへのメッセージ ✦",
     },
     "gradient_dark": {
         "desc": "ダークミニマル",
-        "bg_top": (10, 10, 20), "bg_bottom": (30, 20, 50),
-        "text_color": (230, 220, 255), "accent_color": (150, 120, 255),
-        "shadow_color": (0, 0, 0),
-        "header": "message for you", "footer": "spiritual reading",
+        "bg_top": (8, 8, 18), "bg_bottom": (25, 15, 45),
+        "text_color": (235, 225, 255), "accent_color": (160, 130, 255),
+        "glow_color": (100, 60, 200), "shadow_color": (0, 0, 0),
+        "header": "— message for you —", "footer": "✦ spiritual reading ✦",
     },
     "gradient_sunset": {
         "desc": "サンセットオレンジ",
-        "bg_top": (180, 60, 20), "bg_bottom": (240, 160, 30),
-        "text_color": (255, 255, 240), "accent_color": (255, 240, 180),
-        "shadow_color": (80, 20, 0),
-        "header": "今日のあなたへ", "footer": "心に届くメッセージ",
+        "bg_top": (150, 40, 10), "bg_bottom": (220, 130, 20),
+        "text_color": (255, 255, 245), "accent_color": (255, 235, 160),
+        "glow_color": (255, 180, 80), "shadow_color": (60, 10, 0),
+        "header": "今日のあなたへ", "footer": "✦ 心に届くメッセージ ✦",
     },
     "gradient_midnight": {
         "desc": "ミッドナイトブルー",
-        "bg_top": (5, 10, 50), "bg_bottom": (20, 50, 120),
-        "text_color": (220, 235, 255), "accent_color": (180, 210, 255),
-        "shadow_color": (0, 0, 20),
-        "header": "星からのメッセージ", "footer": "今夜、あなたに届く言葉",
+        "bg_top": (3, 8, 40), "bg_bottom": (15, 40, 100),
+        "text_color": (220, 240, 255), "accent_color": (160, 200, 255),
+        "glow_color": (80, 140, 255), "shadow_color": (0, 0, 15),
+        "header": "星からのメッセージ", "footer": "✦ 今夜、あなたに届く言葉 ✦",
     },
 }
 
@@ -56,40 +64,40 @@ GRADIENT_STYLES = {
 AI_STYLES = {
     "ai_goddess": {
         "desc": "女神・スピリチュアル女性（AI生成）",
-        "prompt": "beautiful ethereal goddess woman, spiritual golden purple glowing aura, mystical soft dreamy, high quality portrait, no text, no watermark",
-        "overlay_opacity": 0.45,
-        "text_color": (255, 245, 210), "accent_color": (255, 215, 100),
+        "prompt": "beautiful ethereal goddess woman, spiritual golden purple glowing aura, mystical soft dreamy bokeh, high quality cinematic portrait, dark background, no text, no watermark",
+        "overlay_opacity": 0.50,
+        "text_color": (255, 248, 220), "accent_color": (255, 210, 90),
         "shadow_color": (0, 0, 0),
-        "header": "女神からのメッセージ", "footer": "あなたへの祝福",
+        "header": "女神からのメッセージ", "footer": "✦ あなたへの祝福 ✦",
     },
     "ai_cosmic": {
         "desc": "宇宙・銀河（AI生成）",
-        "prompt": "cosmic galaxy nebula stars universe, purple blue violet, mystical spiritual beautiful, no text, no watermark, high quality",
-        "overlay_opacity": 0.40,
-        "text_color": (220, 235, 255), "accent_color": (180, 200, 255),
+        "prompt": "cosmic galaxy nebula stars universe, deep purple blue violet, mystical spiritual beautiful, cinematic, no text, no watermark, high quality 8k",
+        "overlay_opacity": 0.45,
+        "text_color": (220, 238, 255), "accent_color": (180, 205, 255),
         "shadow_color": (0, 0, 20),
-        "header": "星からのメッセージ", "footer": "宇宙はあなたの味方",
+        "header": "星からのメッセージ", "footer": "✦ 宇宙はあなたの味方 ✦",
     },
     "ai_nature": {
         "desc": "神秘的な森・自然（AI生成）",
-        "prompt": "sacred magical forest divine light rays, mystical ethereal nature, spiritual glowing atmosphere, beautiful, no text, no watermark",
-        "overlay_opacity": 0.50,
-        "text_color": (240, 255, 230), "accent_color": (180, 240, 160),
-        "shadow_color": (0, 20, 0),
-        "header": "自然からのサイン", "footer": "今のあなたへ",
+        "prompt": "sacred magical forest with divine golden light rays through trees, mystical ethereal nature, spiritual glowing atmosphere, beautiful cinematic, no text, no watermark",
+        "overlay_opacity": 0.52,
+        "text_color": (245, 255, 235), "accent_color": (180, 240, 150),
+        "shadow_color": (0, 15, 0),
+        "header": "自然からのサイン", "footer": "✦ 今のあなたへ ✦",
     },
     "ai_emotional": {
         "desc": "エモい抽象アート（AI生成）",
-        "prompt": "emotional abstract watercolor art, soft dreamy romantic, purple pink blue pastel, aesthetic beautiful, no text, no watermark",
-        "overlay_opacity": 0.45,
-        "text_color": (255, 240, 245), "accent_color": (255, 180, 200),
-        "shadow_color": (40, 0, 20),
-        "header": "心に届く言葉", "footer": "あなたの気持ちは正しい",
+        "prompt": "emotional abstract watercolor art, soft dreamy romantic bokeh light, purple pink rose gold pastel gradient, aesthetic beautiful cinematic, no text, no watermark",
+        "overlay_opacity": 0.48,
+        "text_color": (255, 242, 248), "accent_color": (255, 185, 210),
+        "shadow_color": (30, 0, 15),
+        "header": "心に届く言葉", "footer": "✦ あなたの気持ちは正しい ✦",
     },
 }
 
 ALL_STYLES = list(GRADIENT_STYLES.keys()) + list(AI_STYLES.keys())
-STYLES = {**GRADIENT_STYLES, **AI_STYLES}  # 全スタイルを統合した辞書
+STYLES = {**GRADIENT_STYLES, **AI_STYLES}
 
 # ─── コンテンツパターン ────────────────────────────────────
 CONTENT_PATTERNS = {
@@ -102,13 +110,17 @@ ALL_CONTENT_PATTERNS = list(CONTENT_PATTERNS.keys())
 
 
 # ─── ユーティリティ ───────────────────────────────────────
-def _get_font(size):
-    for path in FONT_PATHS:
+def _get_font(size, bold=False):
+    paths = FONT_PATHS_BOLD if bold else FONT_PATHS_REGULAR
+    for path in paths:
         if os.path.exists(path):
             try:
                 return ImageFont.truetype(path, size)
             except Exception:
                 continue
+    # ボールドが見つからなければレギュラーにフォールバック
+    if bold:
+        return _get_font(size, bold=False)
     return ImageFont.load_default()
 
 
@@ -124,15 +136,45 @@ def _make_gradient(color_top, color_bottom):
     return img
 
 
-def _fetch_ai_background(prompt, timeout=50):
+def _add_bokeh(img, glow_color, count=12, seed=None):
+    """グラジェント背景にソフトなボケ丸を重ねてリッチな質感にする"""
+    rng = random.Random(seed)
+    bokeh = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    bdraw = ImageDraw.Draw(bokeh)
+    for _ in range(count):
+        x = rng.randint(-100, SIZE + 100)
+        y = rng.randint(-100, SIZE + 100)
+        r = rng.randint(40, 140)
+        alpha = rng.randint(15, 50)
+        bdraw.ellipse([(x - r, y - r), (x + r, y + r)],
+                      fill=(*glow_color, alpha))
+    bokeh = bokeh.filter(ImageFilter.GaussianBlur(radius=35))
+    return Image.alpha_composite(img.convert("RGBA"), bokeh).convert("RGB")
+
+
+def _add_center_glow(img, glow_color):
+    """中央に柔らかいグロー（光）を追加してテキスト周りを引き立てる"""
+    glow = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
+    gdraw = ImageDraw.Draw(glow)
+    cx, cy = SIZE // 2, SIZE // 2
+    for radius, alpha in [(380, 20), (260, 30), (160, 40)]:
+        gdraw.ellipse([(cx - radius, cy - radius), (cx + radius, cy + radius)],
+                      fill=(*glow_color, alpha))
+    glow = glow.filter(ImageFilter.GaussianBlur(radius=60))
+    return Image.alpha_composite(img.convert("RGBA"), glow).convert("RGB")
+
+
+def _fetch_ai_background(prompt, timeout=55):
     """Pollinations.ai でAI背景画像を生成する（無料・APIキー不要）"""
     import requests
     from urllib.parse import quote
+    seed = int(datetime.now().timestamp()) % 99999
     encoded = quote(prompt)
-    url = f"https://image.pollinations.ai/prompt/{encoded}?width={SIZE}&height={SIZE}&nologo=true&seed={hash(prompt) % 9999}"
+    url = (f"https://image.pollinations.ai/prompt/{encoded}"
+           f"?width={SIZE}&height={SIZE}&nologo=true&seed={seed}&enhance=true")
     try:
         res = requests.get(url, timeout=timeout)
-        if res.status_code == 200:
+        if res.status_code == 200 and len(res.content) > 10000:
             img = Image.open(BytesIO(res.content)).convert("RGB")
             return img.resize((SIZE, SIZE), Image.LANCZOS)
     except Exception as e:
@@ -146,13 +188,10 @@ def _apply_dark_overlay(img, opacity):
     return Image.alpha_composite(img.convert("RGBA"), overlay).convert("RGB")
 
 
-def _draw_stars(draw, count=30, color=(255, 255, 255), seed=42):
-    import random
-    random.seed(seed)
-    for _ in range(count):
-        x, y = random.randint(0, SIZE), random.randint(0, SIZE)
-        r = random.randint(1, 3)
-        draw.ellipse([(x - r, y - r), (x + r, y + r)], fill=color)
+def _draw_text_with_shadow(draw, text, font, x, y, color, shadow_color, shadow_offset=3):
+    """影付きテキストを描画"""
+    draw.text((x + shadow_offset, y + shadow_offset), text, font=font, fill=shadow_color)
+    draw.text((x, y), text, font=font, fill=color)
 
 
 def _draw_text_centered(draw, text, font, y, color, shadow_color):
@@ -162,8 +201,7 @@ def _draw_text_centered(draw, text, font, y, color, shadow_color):
     except AttributeError:
         tw, _ = draw.textsize(text, font=font)
     x = (SIZE - tw) / 2
-    draw.text((x + 2, y + 2), text, font=font, fill=shadow_color)
-    draw.text((x, y), text, font=font, fill=color)
+    _draw_text_with_shadow(draw, text, font, x, y, color, shadow_color)
 
 
 def _get_content_lines(post_text):
@@ -173,51 +211,141 @@ def _get_content_lines(post_text):
     ]
 
 
+def _pick_best_lines(post_text, max_lines=3):
+    """投稿から最もインパクトのある2〜3行を選ぶ"""
+    lines = _get_content_lines(post_text)
+    if not lines:
+        return [""]
+
+    # 短めでインパクトのある行を優先（15文字以下）
+    short_lines = [l for l in lines if 4 <= len(l) <= 20]
+    # 疑問文を優先
+    question_lines = [l for l in lines if "？" in l or "?" in l]
+
+    selected = []
+    # 1行目は必ず先頭から取る（フック）
+    selected.append(lines[0])
+
+    # 2行目以降: 疑問文 > 短い行 > 通常順
+    candidates = question_lines + short_lines + lines[1:]
+    seen = set(selected)
+    for l in candidates:
+        if l not in seen and len(selected) < max_lines:
+            selected.append(l)
+            seen.add(l)
+
+    return selected
+
+
 def _extract_image_text(post_text, pattern):
     """コンテンツパターンに応じた表示テキストとフォントサイズを返す"""
     lines = _get_content_lines(post_text)
     if not lines:
-        return [""], 62
+        return [""], 58
 
     if pattern == "hook":
+        # 1行目を大きく見せる
         hook = lines[0]
-        if len(hook) > 28:
-            hook = hook[:26] + "…"
-        return [hook], 62
+        if len(hook) > 22:
+            hook = hook[:20] + "…"
+        return [hook], 68
 
     elif pattern == "multi_line":
-        selected = []
-        for l in lines[:4]:
-            selected.append(l[:20] + "…" if len(l) > 22 else l)
-            if len(selected) >= 3:
-                break
-        return selected, 44
+        # 2〜3行を中サイズで
+        selected = _pick_best_lines(post_text, max_lines=3)
+        result = []
+        for l in selected:
+            result.append(l[:18] + "…" if len(l) > 20 else l)
+        return result, 52
 
     elif pattern == "short_phrase":
-        candidates = [l for l in lines if 4 < len(l) <= 20]
-        phrase = min(candidates, key=len) if candidates else lines[0][:16]
-        return [phrase], 80
+        # 最もインパクトのある短いフレーズを特大で
+        candidates = [l for l in lines if 4 < len(l) <= 16]
+        phrase = min(candidates, key=len) if candidates else lines[0][:14]
+        return [phrase], 88
 
     elif pattern == "question":
+        # 疑問文を優先して大きく見せる
         for l in lines:
             if "？" in l or "?" in l:
-                return [l[:26] + "…" if len(l) > 28 else l], 58
-        hook = lines[0]
+                text = l[:22] + "…" if len(l) > 24 else l
+                return [text], 62
+        hook = lines[0][:20]
         if not (hook.endswith("？") or hook.endswith("?")):
-            hook = hook[:22] + "？"
-        return [hook], 58
+            hook += "？"
+        return [hook], 62
 
-    return [lines[0]], 62
+    return [lines[0][:20]], 62
+
+
+# ─── 装飾要素 ─────────────────────────────────────────────
+def _draw_ornament_lines(draw, accent_color):
+    """上下の装飾ラインをダブルラインで描く"""
+    y_top = int(SIZE * 0.20)
+    y_bot = int(SIZE * 0.80)
+    x1, x2 = int(SIZE * 0.10), int(SIZE * 0.90)
+
+    draw.line([(x1, y_top), (x2, y_top)], fill=accent_color, width=2)
+    draw.line([(x1, y_top + 5), (x2, y_top + 5)], fill=(*accent_color[:3], 120), width=1)
+    draw.line([(x1, y_bot), (x2, y_bot)], fill=accent_color, width=2)
+    draw.line([(x1, y_bot - 5), (x2, y_bot - 5)], fill=(*accent_color[:3], 120), width=1)
+
+
+def _draw_corner_dots(draw, accent_color):
+    """四隅にアクセントの小さな菱形を描く"""
+    size = 6
+    for x, y in [(int(SIZE * 0.10), int(SIZE * 0.20)),
+                 (int(SIZE * 0.90), int(SIZE * 0.20)),
+                 (int(SIZE * 0.10), int(SIZE * 0.80)),
+                 (int(SIZE * 0.90), int(SIZE * 0.80))]:
+        draw.polygon([(x, y - size), (x + size, y),
+                      (x, y + size), (x - size, y)], fill=accent_color)
 
 
 # ─── メイン生成関数 ───────────────────────────────────────
+def load_style_guide_summary():
+    """style_guide.jsonのサマリーを読み込む（なければNone）"""
+    path = os.path.join(os.path.dirname(__file__), "style_guide.json")
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data.get("summary")
+    except Exception:
+        return None
+
+
+def get_recommended_style():
+    """
+    style_guide.jsonの分析結果から推奨スタイルを返す
+    データがなければgradient_purpleを返す
+    """
+    summary = load_style_guide_summary()
+    if not summary or summary.get("total_analyzed", 0) < 3:
+        return None  # データ不足→通常のA/Bテストに任せる
+
+    bg = summary.get("top_background_type", "")
+    atm = summary.get("top_atmosphere", "")
+    has_person_rate = summary.get("has_person_rate", 0)
+
+    # 分析結果からスタイルをマッピング
+    if has_person_rate > 0.5:
+        return "ai_goddess"
+    if "cosmic" in atm or bg == "ai_art":
+        return "ai_cosmic"
+    if "dark" in atm or bg == "solid_dark":
+        return "gradient_dark"
+    if "warm" in atm or "emotional" in atm:
+        return "ai_emotional"
+    if "dreamy" in atm or "romantic" in atm:
+        return "gradient_purple"
+    return None
+
+
 def create_fortune_image(post_text, output_path,
                          style="gradient_purple",
                          content_pattern="hook"):
-    """
-    スタイル・コンテンツパターン指定で画像を生成する
-    AI系スタイルはPollinations.aiで生成、失敗時はgradient_purpleにフォールバック
-    """
     if style not in ALL_STYLES:
         style = "gradient_purple"
     if content_pattern not in CONTENT_PATTERNS:
@@ -225,65 +353,54 @@ def create_fortune_image(post_text, output_path,
 
     # ─ 背景生成 ─
     is_ai = style in AI_STYLES
+    s = STYLES[style]
+
     if is_ai:
-        s = AI_STYLES[style]
         print(f"  AI画像生成中... ({s['desc']})")
         img = _fetch_ai_background(s["prompt"])
         if img is None:
             print(f"  フォールバック: gradient_purple を使用")
             style = "gradient_purple"
+            s = GRADIENT_STYLES[style]
             is_ai = False
 
     if not is_ai:
-        s = GRADIENT_STYLES[style]
         img = _make_gradient(s["bg_top"], s["bg_bottom"])
+        img = _add_bokeh(img, s["glow_color"], count=14,
+                         seed=hash(post_text[:20]) % 9999)
+        img = _add_center_glow(img, s["glow_color"])
 
     # ─ オーバーレイ ─
     if is_ai:
         img = _apply_dark_overlay(img, s["overlay_opacity"])
-        # グラジェント系にある星装飾をAI画像にも薄く追加
-        draw_tmp = ImageDraw.Draw(img)
-        _draw_stars(draw_tmp, count=20, color=(255, 255, 255))
-    else:
-        draw_tmp = ImageDraw.Draw(img)
-        _draw_stars(draw_tmp, count=35, color=s["accent_color"])
 
     draw = ImageDraw.Draw(img)
 
-    # ─ 装飾ライン ─
-    lw = 2
-    draw.line([(SIZE * 0.1, SIZE * 0.22), (SIZE * 0.9, SIZE * 0.22)],
-              fill=s["accent_color"], width=lw)
-    draw.line([(SIZE * 0.1, SIZE * 0.78), (SIZE * 0.9, SIZE * 0.78)],
-              fill=s["accent_color"], width=lw)
+    # ─ 装飾 ─
+    _draw_ornament_lines(draw, s["accent_color"])
+    _draw_corner_dots(draw, s["accent_color"])
 
     # ─ ヘッダー ─
-    header_font = _get_font(34)
+    header_font = _get_font(32)
     _draw_text_centered(draw, s["header"], header_font,
-                        SIZE * 0.25, s["accent_color"], s["shadow_color"])
+                        int(SIZE * 0.12), s["accent_color"], s["shadow_color"])
 
-    # ─ メインテキスト ─
+    # ─ メインテキスト（2〜3行・ボールド） ─
     text_lines, font_size = _extract_image_text(post_text, content_pattern)
-    main_font = _get_font(font_size)
-    line_h = int(font_size * 1.3)
-    wrap_width = max(8, int(900 / font_size))
+    main_font = _get_font(font_size, bold=True)
+    line_h = int(font_size * 1.55)
+    total_h = len(text_lines) * line_h
+    y_start = (SIZE - total_h) / 2 - 20
 
-    all_wrapped = []
-    for line in text_lines:
-        all_wrapped.extend(textwrap.wrap(line, width=wrap_width) or [line])
-
-    total_h = len(all_wrapped) * line_h
-    y_start = (SIZE - total_h) / 2 - 10
-
-    for i, line in enumerate(all_wrapped):
+    for i, line in enumerate(text_lines):
         _draw_text_centered(draw, line, main_font,
                             y_start + i * line_h,
                             s["text_color"], s["shadow_color"])
 
     # ─ フッター ─
-    sub_font = _get_font(30)
+    sub_font = _get_font(28)
     _draw_text_centered(draw, s["footer"], sub_font,
-                        SIZE * 0.81, s["accent_color"], s["shadow_color"])
+                        int(SIZE * 0.84), s["accent_color"], s["shadow_color"])
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     img.save(output_path, "PNG", optimize=True)
