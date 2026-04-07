@@ -570,7 +570,14 @@
     "image_style": "gradient_purple",
     "image_content_pattern": "hook",
     "length_category": "medium",
-    "metrics": null,
-    "metrics_collected": false
+    "metrics": {
+      "views": 2,
+      "likes": 0,
+      "replies": 0,
+      "reposts": 0,
+      "quotes": 0,
+      "engagement_rate": 0.0
+    },
+    "metrics_collected": true
   }
 ]
