@@ -127,6 +127,26 @@ def crop_post_body(image_path: str, top_ratio: float = 0.18, bottom_ratio: float
     return image_path
 
 
+def extract_text_from_post(url: str) -> str:
+    """Threads投稿URLからテキストを抽出して返す"""
+    try:
+        result = subprocess.run(
+            [PYTHON, WORKER, "--text", url],
+            timeout=SCREENSHOT_TIMEOUT,
+            capture_output=True,
+            text=True,
+        )
+        output = result.stdout.strip()
+        for line in output.splitlines():
+            if line.startswith("TEXT:"):
+                text = line[5:].strip()
+                logger.info(f"[Threads] テキスト取得: {text[:50]}...")
+                return text
+        raise RuntimeError(f"テキスト取得失敗: {output or result.stderr.strip()}")
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"テキスト取得タイムアウト: {url}")
+
+
 def screenshot_post(url: str) -> str:
     """URLからプラットフォームを自動判定してスクショ取得"""
     if "x.com" in url or "twitter.com" in url:

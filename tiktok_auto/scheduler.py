@@ -26,7 +26,8 @@ from datetime import datetime
 import schedule
 
 import config
-from scraper import screenshot_post
+from scraper import screenshot_post, extract_text_from_post
+from card_generator import generate_card
 from composer import compose_video
 from uploader import upload_to_tiktok
 
@@ -164,10 +165,14 @@ def run_post_job():
     try:
         import time as _time
 
-        # 1) スクリーンショット取得
-        logger.info("1/3 スクリーンショット取得中...")
+        # 1) テキスト取得 → X風カード生成
+        logger.info("1/3 テキスト取得・カード生成中...")
         _t = _time.time()
-        ss_path = screenshot_post(url)
+        post_text = extract_text_from_post(url)
+        timestamp_card = datetime.now().strftime("%Y%m%d_%H%M%S")
+        os.makedirs(config.SCREENSHOTS_DIR, exist_ok=True)
+        ss_path = os.path.join(config.SCREENSHOTS_DIR, f"card_{timestamp_card}.png")
+        generate_card(post_text, ss_path)
         logger.info(f"1/3完了: {_time.time()-_t:.1f}秒")
 
         # 2) 動画合成

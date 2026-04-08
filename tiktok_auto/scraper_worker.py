@@ -35,6 +35,53 @@ def dismiss_overlays(page):
         pass
 
 
+def extract_text(url: str) -> str:
+    """Threadsの投稿からテキストだけを取得して stdout に出力"""
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            viewport={"width": 1080, "height": 1920},
+            user_agent=(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+        )
+        page = context.new_page()
+        try:
+            page.goto(url, wait_until="domcontentloaded", timeout=20000)
+            time.sleep(3)
+            dismiss_overlays(page)
+
+            # テキスト抽出を試みる
+            text = ""
+            for sel in [
+                'article [data-pressable-container] span',
+                'article span[dir="auto"]',
+                'div[data-pressable-container] span',
+                'span[dir="auto"]',
+            ]:
+                try:
+                    els = page.locator(sel).all()
+                    parts = [el.inner_text().strip() for el in els if el.inner_text().strip()]
+                    if parts:
+                        text = "\n".join(parts[:5])  # 最初の5要素
+                        break
+                except Exception:
+                    continue
+
+            if text:
+                print(f"TEXT:{text}", flush=True)
+            else:
+                print("ERROR:テキスト取得失敗", flush=True)
+                sys.exit(1)
+        except Exception as e:
+            print(f"ERROR:{e}", flush=True)
+            sys.exit(1)
+        finally:
+            browser.close()
+
+
 def run(url: str, save_path: str):
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -95,7 +142,18 @@ def run(url: str, save_path: str):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 3:
+    if len(sys.argv) < 2:
         print("ERROR:引数不足", flush=True)
         sys.exit(1)
-    run(sys.argv[1], sys.argv[2])
+    if sys.argv[1] == "--text":
+        # テキスト抽出モード: python scraper_worker.py --text <url>
+        if len(sys.argv) < 3:
+            print("ERROR:引数不足", flush=True)
+            sys.exit(1)
+        extract_text(sys.argv[2])
+    else:
+        # スクショモード: python scraper_worker.py <url> <save_path>
+        if len(sys.argv) < 3:
+            print("ERROR:引数不足", flush=True)
+            sys.exit(1)
+        run(sys.argv[1], sys.argv[2])
