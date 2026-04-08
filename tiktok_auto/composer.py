@@ -139,8 +139,8 @@ def compose_video(
     ss_clip  = ImageClip(ss_array)
 
     # 表示時間: フェードイン0.3s 後、動画終わりまで表示
-    ss_clip = ss_clip.with_start(0.3).with_duration(duration - 0.3)
-    ss_clip = ss_clip.with_effects([CrossFadeIn(0.4)])
+    ss_clip = ss_clip.with_start(0.1).with_duration(duration - 0.1)
+    ss_clip = ss_clip.with_effects([CrossFadeIn(0.15)])
 
     # 中央 (X方向) + 上から SCREENSHOT_Y_RATIO の位置
     x_pos = (config.VIDEO_WIDTH  - ss_img.width)  // 2
