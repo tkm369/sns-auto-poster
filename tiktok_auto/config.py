@@ -39,7 +39,7 @@ VIDEO_HEIGHT = 1920
 
 # スクショのオーバーレイ位置・サイズ (画面幅に対する割合)
 SCREENSHOT_WIDTH_RATIO = 0.88   # 画面幅の88%
-SCREENSHOT_Y_RATIO     = 0.25   # 上から25%の位置に配置
+SCREENSHOT_Y_RATIO     = 0.40   # 上から40%の位置に配置
 
 # 角丸の半径 (px)
 CORNER_RADIUS = 30

@@ -148,7 +148,7 @@ def run_post_job():
         timestamp  = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_path = os.path.join(config.OUTPUT_DIR, f"tiktok_{timestamp}.mp4")
         caption     = build_caption(item)
-        compose_video(ss_path, output_path, caption_text=caption, duration=15.0)
+        compose_video(ss_path, output_path, caption_text=caption, duration=7.0)
         logger.info(f"2/3完了: {_time.time()-_t:.1f}秒")
 
         # 3) TikTokアップロード
