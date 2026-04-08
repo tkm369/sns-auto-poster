@@ -37,6 +37,7 @@ jobs:
           THREADS_ACCESS_TOKEN:   ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID:        ${{ secrets.THREADS_USER_ID }}
           TIKTOK_EXTRA_COOKIES:   ${{ secrets.TIKTOK_EXTRA_COOKIES }}
+          GEMINI_API_KEY:         ${{ secrets.GEMINI_API_KEY }}
         run: |
           cd tiktok_auto
           C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe post_job.py

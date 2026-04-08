@@ -28,6 +28,7 @@ import schedule
 import config
 from scraper import screenshot_post, extract_text_from_post
 from card_generator import generate_card
+from text_improver import improve_text
 from composer import compose_video
 from uploader import upload_to_tiktok
 
@@ -114,43 +115,6 @@ def build_caption(item: dict) -> str:
     return full_caption.strip()
 
 
-def _confirm_post(ss_path: str, video_path: str, url: str) -> bool:
-    """スクショを開いてWindowsダイアログで投稿確認。2分以内に返答なければ自動スキップ。"""
-    import subprocess as _sp
-    import threading
-
-    # スクショをデフォルトアプリで開く
-    try:
-        _sp.Popen(["explorer", ss_path])
-    except Exception:
-        pass
-
-    result = {"answer": None}
-
-    def ask():
-        try:
-            ans = _sp.run(
-                [
-                    "powershell", "-NoProfile", "-Command",
-                    f'Add-Type -AssemblyName PresentationFramework; '
-                    f'$r = [System.Windows.MessageBox]::Show('
-                    f'"スクショを確認してください。\\n\\nURL: {url}\\n\\nこの内容をTikTokに投稿しますか？", '
-                    f'"投稿確認", "YesNo", "Question"); '
-                    f'Write-Output $r'
-                ],
-                capture_output=True, text=True, timeout=130
-            )
-            result["answer"] = ans.stdout.strip()
-        except Exception:
-            result["answer"] = "No"
-
-    t = threading.Thread(target=ask, daemon=True)
-    t.start()
-    t.join(timeout=120)  # 2分待つ
-
-    # 返答なし or No → スキップ
-    return result["answer"] == "Yes"
-
 
 def run_post_job():
     """1投稿分の処理: スクショ → 動画合成 → TikTokアップロード"""
@@ -169,10 +133,12 @@ def run_post_job():
         logger.info("1/3 テキスト取得・カード生成中...")
         _t = _time.time()
         post_text = extract_text_from_post(url)
+        improved_text = improve_text(post_text)
+        logger.info(f"テキスト改良: {improved_text[:50]}...")
         timestamp_card = datetime.now().strftime("%Y%m%d_%H%M%S")
         os.makedirs(config.SCREENSHOTS_DIR, exist_ok=True)
         ss_path = os.path.join(config.SCREENSHOTS_DIR, f"card_{timestamp_card}.png")
-        generate_card(post_text, ss_path)
+        generate_card(improved_text, ss_path)
         logger.info(f"1/3完了: {_time.time()-_t:.1f}秒")
 
         # 2) 動画合成
@@ -183,12 +149,6 @@ def run_post_job():
         caption     = build_caption(item)
         compose_video(ss_path, output_path, caption_text=caption, duration=15.0)
         logger.info(f"2/3完了: {_time.time()-_t:.1f}秒")
-
-        # 2.5) 投稿前確認（デスクトップにプレビュー表示）
-        if not _confirm_post(ss_path, output_path, url):
-            logger.info(f"投稿をスキップしました: {url}")
-            mark_item(url, "failed")
-            return
 
         # 3) TikTokアップロード
         logger.info("3/3 TikTokにアップロード中...")

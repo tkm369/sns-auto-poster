@@ -88,58 +88,18 @@ def generate_card(text: str, save_path: str) -> str:
     bbox = tmp_draw.textbbox((0, 0), "あ", font=font_text)
     line_h = int((bbox[3] - bbox[1]) * LINE_SPACING)
 
-    # カードの高さを計算
-    logo_area   = 80   # Xロゴ + 上余白
-    text_area   = line_h * len(lines) + PADDING
-    meta_area   = 60   # いいね数などのエリア
-    card_h = logo_area + text_area + meta_area + PADDING
+    # カードの高さを計算（アイコン・いいねボタンなし）
+    card_h = PADDING + line_h * len(lines) + PADDING
 
     # カード生成
     img = Image.new("RGB", (CARD_WIDTH, card_h), CARD_COLOR)
     draw = ImageDraw.Draw(img)
 
-    # 上部ボーダー
-    draw.line([(0, 0), (CARD_WIDTH, 0)], fill=BORDER_COLOR, width=2)
-
-    # X ロゴ
-    logo_size = 36
-    logo_x = PADDING
-    logo_y = PADDING
-    _draw_x_logo(draw, logo_x, logo_y, logo_size)
-
-    # 「匿名の投稿」テキスト
-    draw.text(
-        (logo_x + logo_size + 16, logo_y + 4),
-        "投稿",
-        font=font_meta,
-        fill=META_COLOR,
-    )
-
-    # 本文
-    text_y = logo_y + logo_size + 24
+    # 本文のみ
+    text_y = PADDING
     for line in lines:
         draw.text((PADDING, text_y), line, font=font_text, fill=TEXT_COLOR)
         text_y += line_h
-
-    # 下部区切り線
-    draw.line(
-        [(PADDING, text_y + 16), (CARD_WIDTH - PADDING, text_y + 16)],
-        fill=BORDER_COLOR, width=1
-    )
-
-    # いいね/リポスト（ダミー）
-    draw.text(
-        (PADDING, text_y + 28),
-        "♡  ↺  ···",
-        font=font_meta,
-        fill=META_COLOR,
-    )
-
-    # 下部ボーダー
-    draw.line(
-        [(0, card_h - 2), (CARD_WIDTH, card_h - 2)],
-        fill=BORDER_COLOR, width=2
-    )
 
     # 角丸マスク
     from PIL import Image as PILImage
