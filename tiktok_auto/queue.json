@@ -77,8 +77,9 @@
     "url": "https://www.threads.net/post/DWnSdgtjmle",
     "caption_override": "",
     "added_at": "2026-04-08T10:14:57.183346",
-    "status": "done",
-    "processed_at": "2026-04-08T18:53:15.984520"
+    "status": "failed",
+    "processed_at": "2026-04-08T15:01:42.657932",
+    "fail_count": 1
   },
   {
     "url": "https://www.threads.net/post/DWqqcIgge3T",
