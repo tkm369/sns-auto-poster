@@ -1,46 +1,27 @@
 """
-uploader.py - TikTok への自動アップロード
+uploader.py - TikTok への自動アップロード（subprocess方式）
 
 実際のChromeをCDP経由で操作することでbot検出を回避。
-認証: TIKTOK_SESSION_ID + TIKTOK_EXTRA_COOKIES 環境変数
+uploader_worker.py を子プロセスとして実行し、タイムアウト時はプロセスごと強制終了する。
 """
 
 import os
+import sys
 import json
-import time
 import subprocess
 import logging
-import tempfile
 
 import config
 
 logger = logging.getLogger(__name__)
 
-CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-DEBUG_PROFILE = r"C:\tiktok_debug_profile"
-CDP_PORT = 9223  # メインChromeと衝突しないよう9223を使用
+UPLOAD_TIMEOUT = 300  # 5分でタイムアウト
+WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploader_worker.py")
+PYTHON = sys.executable
 
 
 def _session_id() -> str:
     return os.environ.get("TIKTOK_SESSION_ID", "") or config.TIKTOK_SESSION_ID
-
-
-def _all_cookies() -> list:
-    cookies = []
-    sid = _session_id()
-    if sid and sid != "your_tiktok_session_id":
-        cookies.append({
-            "name": "sessionid",
-            "value": sid,
-            "domain": ".tiktok.com",
-            "path": "/",
-        })
-    extra = os.environ.get("TIKTOK_EXTRA_COOKIES", "[]")
-    try:
-        cookies.extend(json.loads(extra))
-    except Exception:
-        pass
-    return cookies
 
 
 def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> bool:
@@ -48,197 +29,42 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
         logger.error(f"動画ファイルが見つかりません: {video_path}")
         return False
 
-    cookies = _all_cookies()
-    if not any(c["name"] == "sessionid" for c in cookies):
+    sid = _session_id()
+    if not sid or sid == "your_tiktok_session_id":
         logger.error("TIKTOK_SESSION_ID が設定されていません")
         return False
-    # port 9223 を使っている既存Chromeを終了
+
+    env = os.environ.copy()
+
     try:
-        kill_result = subprocess.run(
-            ["netstat", "-ano"],
-            capture_output=True, text=True, timeout=5
+        result = subprocess.run(
+            [PYTHON, WORKER, video_path, caption],
+            timeout=UPLOAD_TIMEOUT,
+            capture_output=True,
+            text=True,
+            env=env,
         )
-        for line in kill_result.stdout.splitlines():
-            if f":{CDP_PORT}" in line and "LISTENING" in line:
-                pid = line.strip().split()[-1]
-                subprocess.run(["taskkill", "/F", "/PID", pid], timeout=5)
-                logger.info(f"既存のChromeプロセス(PID:{pid})を終了しました")
-                time.sleep(1)
-                break
-    except Exception:
-        pass
-
-    # デバッグ用Chromeを起動
-    chrome_proc = subprocess.Popen([
-        CHROME_PATH,
-        f"--remote-debugging-port={CDP_PORT}",
-        f"--user-data-dir={DEBUG_PROFILE}",
-        "--no-first-run",
-        "--no-default-browser-check",
-        "--disable-extensions",
-        "--no-restore-session-state",
-        "--disable-session-crashed-bubble",
-        "--hide-crash-restore-bubble",
-        "about:blank",
-    ])
-    time.sleep(3)
-
-    try:
-        from playwright.sync_api import sync_playwright
-        with sync_playwright() as p:
-            browser = p.chromium.connect_over_cdp(f"http://localhost:{CDP_PORT}")
-            context = browser.contexts[0] if browser.contexts else browser.new_context()
-            page = context.new_page()
-
-            # Cookieを注入
-            context.add_cookies(cookies)
-            logger.info(f"{len(cookies)}個のCookieを注入しました")
-
-            # TikTok Studio アップロードページへ
-            logger.info("TikTok Studio を開いています...")
-            page.goto("https://www.tiktok.com/tiktokstudio/upload", timeout=30000)
-            time.sleep(6)
-
-            current_url = page.url
-            logger.info(f"現在のURL: {current_url}")
-            if "login" in current_url.lower():
-                logger.error("ログインページにリダイレクトされました。sessionidを確認してください。")
-                return False
-
-            # file inputを探す
-            logger.info("アップロードフォームを探しています...")
-            try:
-                file_input = page.locator('input[type="file"]').first
-                file_input.wait_for(state="attached", timeout=15000)
-            except Exception as e:
-                logger.error(f"file inputが見つかりません: {e}")
-                return False
-
-            # 動画をセット
-            logger.info(f"動画をセット中: {video_path}")
-            page.evaluate("""el => {
-                el.style.display = 'block';
-                el.style.opacity = '1';
-                el.removeAttribute('hidden');
-            }""", file_input.element_handle())
-            file_input.set_input_files(video_path)
-            logger.info("動画のセット完了。処理中...")
-            time.sleep(8)
-
-            # キャプション入力
-            caption_short = caption[:150]
-            for sel in [
-                '[data-text="true"]',
-                '[contenteditable="true"]',
-                'textarea[placeholder]',
-                '.caption-input',
-            ]:
-                try:
-                    cap_el = page.locator(sel).first
-                    cap_el.wait_for(timeout=5000)
-                    cap_el.click()
-                    cap_el.fill(caption_short)
-                    logger.info(f"キャプション入力完了 ({sel})")
-                    break
-                except Exception:
-                    continue
-
-            # 動画処理完了を待つ（最大90秒）
-            logger.info("動画処理中... (最大90秒)")
-            for i in range(18):
-                time.sleep(5)
-                buttons = page.evaluate("() => Array.from(document.querySelectorAll('button')).map(b => b.innerText.trim())")
-                # button以外のクリッカブル要素も探す
-                clickable = page.evaluate("""() => Array.from(document.querySelectorAll('[role="button"],[data-e2e],[class*="next"],[class*="submit"],[class*="post"],[class*="publish"]'))
-                    .map(el => el.innerText?.trim() || el.getAttribute('data-e2e') || el.className).filter(t=>t).slice(0,20)""")
-                logger.info(f"[{i*5}s] ボタン: {[b for b in buttons if b]}")
-                logger.info(f"[{i*5}s] クリッカブル: {clickable[:10]}")
-                # 投稿ボタンが出たら止まる
-                post_keywords = ["投稿する", "Post", "公開する", "投稿", "公開"]
-                if any(any(k in b for k in post_keywords) for b in buttons):
-                    break
-
-            # キャプション入力（タイトル欄 or テキストエリア）
-            caption_short = caption[:150]
-            for sel in [
-                '[class*="title"] input',
-                'input[placeholder]',
-                '[contenteditable="true"]',
-                'textarea',
-            ]:
-                try:
-                    el = page.locator(sel).first
-                    el.wait_for(timeout=3000)
-                    el.click()
-                    el.fill(caption_short)
-                    logger.info(f"キャプション入力: {sel}")
-                    break
-                except Exception:
-                    continue
-
-            time.sleep(1)
-
-            # 投稿ボタンをクリック
-            posted = False
-
-            # data-e2e属性一覧をログ出力
-            e2e_attrs = page.evaluate("""() => Array.from(document.querySelectorAll('[data-e2e]'))
-                .map(el => el.getAttribute('data-e2e') + '=' + (el.innerText||'').slice(0,20))
-                .filter(t=>t)""")
-            logger.info(f"data-e2e要素: {e2e_attrs[:15]}")
-
-            # ページ最下部までスクロール（投稿ボタンが隠れている可能性）
-            page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
-            time.sleep(1)
-
-            # 右パネルのsubmit/postボタンを探す（優先順位順）
-            for sel in [
-                '[data-e2e="post_video_button"]',   # TikTok Studio の正確なセレクタ
-                '[data-e2e="post-video-button"]',
-                '[data-e2e="submit_video_button"]',
-                '[data-e2e="submit-video-button"]',
-            ]:
-                try:
-                    btn = page.locator(sel).first
-                    btn.wait_for(state="visible", timeout=3000)
-                    txt = btn.inner_text()
-                    logger.info(f"ボタン発見 ({sel}): '{txt}'")
-                    btn.click()
-                    posted = True
-                    break
-                except Exception:
-                    continue
-
-            if not posted:
-                buttons = page.evaluate("() => Array.from(document.querySelectorAll('button')).map(b => b.innerText.trim()).filter(t => t)")
-                logger.error(f"投稿ボタンが見つかりませんでした。現在のボタン: {buttons}")
-                return False
-
-            # 投稿完了を待つ
-            time.sleep(10)
-            logger.info("投稿完了!")
+        output = result.stdout.strip()
+        for line in output.splitlines():
+            logger.info(f"[worker] {line}")
+        if result.returncode == 0 and "OK:" in output:
             return True
-
-    except Exception as e:
-        logger.error(f"アップロード中にエラー: {e}")
-        import traceback
-        logger.error(traceback.format_exc())
+        else:
+            err = result.stderr.strip()
+            if err:
+                logger.error(f"[worker stderr] {err[:500]}")
+            return False
+    except subprocess.TimeoutExpired:
+        logger.error(f"アップロードが{UPLOAD_TIMEOUT}秒でタイムアウトしました")
         return False
-    finally:
-        try:
-            chrome_proc.terminate()
-            chrome_proc.wait(timeout=5)
-        except Exception:
-            pass
-        try:
-            chrome_proc.kill()
-        except Exception:
-            pass
+    except Exception as e:
+        logger.error(f"uploader起動エラー: {e}")
+        return False
 
 
 if __name__ == "__main__":
-    import sys
-    logging.basicConfig(level=logging.INFO)
+    import logging as _logging
+    _logging.basicConfig(level=_logging.INFO)
     if len(sys.argv) < 3:
         print("使い方: python uploader.py <video.mp4> <キャプション>")
         sys.exit(1)
