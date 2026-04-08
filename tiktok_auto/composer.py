@@ -7,10 +7,14 @@ import random
 import logging
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
-from moviepy import VideoFileClip, VideoClip, ImageClip, CompositeVideoClip
+from moviepy import VideoFileClip, VideoClip, ImageClip, CompositeVideoClip, AudioFileClip
 from moviepy.video.fx import Crop, Resize, Loop, CrossFadeIn
+from moviepy.audio.fx import AudioLoop
 
 import config
+
+BGM_DIR = r"C:\tiktok_bgm"
+BGM_VOLUME = 0.25  # 25%
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +150,23 @@ def compose_video(
     # ---- 合成 --------------------------------------------------------
     final = CompositeVideoClip([bg_clip, ss_clip], size=(config.VIDEO_WIDTH, config.VIDEO_HEIGHT))
     final = final.with_duration(duration)
+
+    # ---- BGM合成 -----------------------------------------------------
+    bgm_files = []
+    if os.path.isdir(BGM_DIR):
+        bgm_files = [f for f in os.listdir(BGM_DIR) if f.lower().endswith((".mp3", ".wav", ".m4a", ".aac"))]
+
+    if bgm_files:
+        bgm_path = os.path.join(BGM_DIR, random.choice(bgm_files))
+        logger.info(f"BGM: {bgm_path}")
+        bgm = AudioFileClip(bgm_path).with_volume_scaled(BGM_VOLUME)
+        if bgm.duration < duration:
+            bgm = bgm.with_effects([AudioLoop(duration=duration)])
+        else:
+            bgm = bgm.subclipped(0, duration)
+        final = final.with_audio(bgm)
+    else:
+        logger.info("BGMなし (C:\\tiktok_bgm\\ にファイルを入れると自動で使用されます)")
 
     # ---- 書き出し ----------------------------------------------------
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
