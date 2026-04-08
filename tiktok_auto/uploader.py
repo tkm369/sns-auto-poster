@@ -52,6 +52,22 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
     if not any(c["name"] == "sessionid" for c in cookies):
         logger.error("TIKTOK_SESSION_ID が設定されていません")
         return False
+    # port 9223 を使っている既存Chromeを終了
+    try:
+        kill_result = subprocess.run(
+            ["netstat", "-ano"],
+            capture_output=True, text=True, timeout=5
+        )
+        for line in kill_result.stdout.splitlines():
+            if f":{CDP_PORT}" in line and "LISTENING" in line:
+                pid = line.strip().split()[-1]
+                subprocess.run(["taskkill", "/F", "/PID", pid], timeout=5)
+                logger.info(f"既存のChromeプロセス(PID:{pid})を終了しました")
+                time.sleep(1)
+                break
+    except Exception:
+        pass
+
     # デバッグ用Chromeを起動
     chrome_proc = subprocess.Popen([
         CHROME_PATH,
@@ -211,6 +227,11 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
     finally:
         try:
             chrome_proc.terminate()
+            chrome_proc.wait(timeout=5)
+        except Exception:
+            pass
+        try:
+            chrome_proc.kill()
         except Exception:
             pass
 
