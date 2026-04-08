@@ -29,7 +29,7 @@ TARGET_COUNT = 10  # ダウンロードする動画数
 def search_videos(query: str, per_page: int = 5) -> list[dict]:
     """Pexels APIで動画を検索"""
     url = f"https://api.pexels.com/videos/search?query={urllib.request.quote(query)}&per_page={per_page}&orientation=portrait"
-    req = urllib.request.Request(url, headers={"Authorization": PEXELS_API_KEY})
+    req = urllib.request.Request(url, headers={"Authorization": PEXELS_API_KEY, "User-Agent": "Mozilla/5.0"})
     try:
         with urllib.request.urlopen(req, timeout=15) as res:
             data = json.loads(res.read())
