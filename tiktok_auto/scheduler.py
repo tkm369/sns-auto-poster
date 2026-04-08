@@ -113,6 +113,44 @@ def build_caption(item: dict) -> str:
     return full_caption.strip()
 
 
+def _confirm_post(ss_path: str, video_path: str, url: str) -> bool:
+    """スクショを開いてWindowsダイアログで投稿確認。2分以内に返答なければ自動スキップ。"""
+    import subprocess as _sp
+    import threading
+
+    # スクショをデフォルトアプリで開く
+    try:
+        _sp.Popen(["explorer", ss_path])
+    except Exception:
+        pass
+
+    result = {"answer": None}
+
+    def ask():
+        try:
+            ans = _sp.run(
+                [
+                    "powershell", "-NoProfile", "-Command",
+                    f'Add-Type -AssemblyName PresentationFramework; '
+                    f'$r = [System.Windows.MessageBox]::Show('
+                    f'"スクショを確認してください。\\n\\nURL: {url}\\n\\nこの内容をTikTokに投稿しますか？", '
+                    f'"投稿確認", "YesNo", "Question"); '
+                    f'Write-Output $r'
+                ],
+                capture_output=True, text=True, timeout=130
+            )
+            result["answer"] = ans.stdout.strip()
+        except Exception:
+            result["answer"] = "No"
+
+    t = threading.Thread(target=ask, daemon=True)
+    t.start()
+    t.join(timeout=120)  # 2分待つ
+
+    # 返答なし or No → スキップ
+    return result["answer"] == "Yes"
+
+
 def run_post_job():
     """1投稿分の処理: スクショ → 動画合成 → TikTokアップロード"""
     item = get_next_pending()
@@ -140,6 +178,12 @@ def run_post_job():
         caption     = build_caption(item)
         compose_video(ss_path, output_path, caption_text=caption, duration=15.0)
         logger.info(f"2/3完了: {_time.time()-_t:.1f}秒")
+
+        # 2.5) 投稿前確認（デスクトップにプレビュー表示）
+        if not _confirm_post(ss_path, output_path, url):
+            logger.info(f"投稿をスキップしました: {url}")
+            mark_item(url, "failed")
+            return
 
         # 3) TikTokアップロード
         logger.info("3/3 TikTokにアップロード中...")
