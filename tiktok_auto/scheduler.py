@@ -135,11 +135,6 @@ def run_post_job():
         post_text = extract_text_from_post(url)
         logger.info(f"【元テキスト】{post_text}")
 
-        if len(post_text.strip()) < 30:
-            logger.warning(f"テキスト短すぎスキップ ({len(post_text)}文字): {post_text[:50]}")
-            mark_done(url, status="skipped")
-            return
-
         if not is_valid_post(post_text):
             logger.warning(f"Gemini判定NG: 不適切なテキストのためスキップ → {post_text[:50]}")
             mark_done(url, status="skipped")
