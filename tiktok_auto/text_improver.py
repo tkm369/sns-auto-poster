@@ -10,6 +10,14 @@ GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent"
 
 
+def _get_style_hint() -> str:
+    try:
+        import config
+        return config.CONTENT_STYLE_HINT or ""
+    except Exception:
+        return ""
+
+
 def improve_text(original_text: str) -> str:
     """
     Gemini APIで投稿テキストを改良して返す。
@@ -17,6 +25,9 @@ def improve_text(original_text: str) -> str:
     """
     if not GEMINI_API_KEY:
         return original_text
+
+    style_hint = _get_style_hint()
+    style_section = f"\n- {style_hint}" if style_hint else ""
 
     prompt = f"""以下は復縁・恋愛ジャンルのSNS投稿テキストです。
 元の意味・感情・口調を維持したまま、TikTokで読まれやすいように少しだけ改良してください。
@@ -27,7 +38,7 @@ def improve_text(original_text: str) -> str:
 - 読みやすく自然な日本語に整える
 - 必ず文章を最後まで完結させること（途中で切らない）
 - 150文字程度を目安にする
-- 改行は適切に入れる
+- 改行は適切に入れる{style_section}
 - 改良後のテキストだけを返す（説明不要）
 
 元のテキスト：

@@ -108,7 +108,9 @@ def mark_item(url: str, status: str):
 
 POSTS_LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "posts_log.json")
 
-def _log_post(post_id: str, source_url: str, text: str, posted_at: str):
+def _log_post(post_id: str, source_url: str, text: str, posted_at: str,
+              text_length: int = 0, posting_hour: int = 0,
+              source_hashtag: str = "", video_duration: float = 7.0):
     """投稿メタデータをposts_log.jsonに記録"""
     if os.path.exists(POSTS_LOG_FILE):
         with open(POSTS_LOG_FILE, "r", encoding="utf-8") as f:
@@ -120,6 +122,10 @@ def _log_post(post_id: str, source_url: str, text: str, posted_at: str):
         "posted_at": posted_at,
         "source_url": source_url,
         "text": text,
+        "text_length": text_length,
+        "posting_hour": posting_hour,
+        "source_hashtag": source_hashtag,
+        "video_duration": video_duration,
         "views": None,
         "likes": None,
         "comments": None,
@@ -187,7 +193,7 @@ def run_post_job():
         timestamp  = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_path = os.path.join(config.OUTPUT_DIR, f"tiktok_{timestamp}.mp4")
         caption     = build_caption(item)
-        compose_video(ss_path, output_path, caption_text=caption, duration=7.0)
+        compose_video(ss_path, output_path, caption_text=caption, duration=config.VIDEO_DURATION)
         logger.info(f"2/3完了: {_time.time()-_t:.1f}秒")
 
         # 3) TikTokアップロード
@@ -198,7 +204,16 @@ def run_post_job():
 
         if ok:
             mark_item(url, "done")
-            _log_post(post_id=timestamp, source_url=url, text=improved_text, posted_at=datetime.now().isoformat())
+            _log_post(
+                post_id=timestamp,
+                source_url=url,
+                text=improved_text,
+                posted_at=datetime.now().isoformat(),
+                text_length=len(improved_text),
+                posting_hour=datetime.now().hour,
+                source_hashtag=item.get("hashtag", ""),
+                video_duration=config.VIDEO_DURATION,
+            )
             logger.info(f"=== 投稿完了: {url} ===")
         else:
             mark_item(url, "failed")
