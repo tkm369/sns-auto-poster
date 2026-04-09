@@ -49,7 +49,12 @@ def improve_text(original_text: str) -> str:
         with urllib.request.urlopen(req, timeout=15) as res:
             data = json.loads(res.read())
             improved = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-            return improved if improved else original_text
+            if not improved:
+                return original_text
+            # 文末が句読点・感嘆符・疑問符で終わっていない場合は元テキストを使用
+            if not improved[-1] in ("。", "！", "？", "!", "?", "…", "♪", "✨", "💕", "🌸"):
+                return original_text
+            return improved
     except Exception:
         return original_text
 
