@@ -7,13 +7,20 @@ LOG_FILE = os.path.join(os.path.dirname(__file__), "posts_log.json")
 MAX_ENTRIES = 90  # 約30日分
 
 def load_log():
-    if os.path.exists(LOG_FILE):
+    if not os.path.exists(LOG_FILE):
+        return []
+    try:
         with open(LOG_FILE, encoding="utf-8") as f:
-            try:
-                return json.load(f)
-            except Exception:
-                return []
-    return []
+            return json.load(f)
+    except json.JSONDecodeError:
+        # 破損時: バックアップを作成してから空リストで再初期化
+        import shutil
+        backup = LOG_FILE + ".bak"
+        shutil.copy2(LOG_FILE, backup)
+        print(f"  ⚠️ posts_log.json 破損 → {backup} にバックアップして再初期化")
+        return []
+    except Exception:
+        return []
 
 def save_log(log):
     # 古いエントリを削除して最大件数を維持

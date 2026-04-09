@@ -24,7 +24,11 @@ def post_to_x(text):
         print(f"  [X] 投稿成功 → https://x.com/i/web/status/{tweet_id}")
         return tweet_id
     except Exception as e:
-        print(f"  [X] 投稿失敗: {e}")
+        err_str = str(e)
+        if "402" in err_str or "Payment Required" in err_str or "453" in err_str:
+            print("  [X] 有料プランが必要なためスキップ")
+        else:
+            print(f"  [X] 投稿失敗: {e}")
         return None
 
 

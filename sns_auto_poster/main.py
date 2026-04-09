@@ -337,12 +337,13 @@ def generate_mode():
                 if image_url:
                     print(f"  画像URL: {image_url}")
                 else:
-                    print(f"  ⚠️ アップロード失敗 → テキスト投稿に変更")
-                    post_type = "text_only"
-                    image_filename = None
-                    image_style = None
-                    image_content_pattern = None
-                    pure_image_style = None
+                    # catbox.moe失敗 → GitHub raw URLにフォールバック
+                    # commit+push後に有効になるため、post_modeで使用できる
+                    image_url = (
+                        "https://raw.githubusercontent.com/tkm369/sns-auto-poster"
+                        f"/master/sns_auto_poster/generated_images/{image_filename}"
+                    )
+                    print(f"  catbox失敗 → GitHub raw URLにフォールバック: {image_url}")
         except Exception as e:
             print(f"  ⚠️ 画像生成失敗 (テキスト投稿に変更): {e}")
             post_type = "text_only"

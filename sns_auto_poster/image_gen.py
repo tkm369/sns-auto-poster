@@ -268,7 +268,7 @@ def check_image_safety(image_path):
             "- その他 SNS 投稿として不適切な内容\n\n"
             "問題がなければ「safe」とだけ返してください。"
         )
-        time.sleep(13)  # Gemini 無料枠 5RPM 制限対策
+        # Pollinations.aiの画像生成で30〜90秒経過しているため追加sleepは不要
         response = client.models.generate_content(
             model="gemini-2.5-flash",
             contents=[
