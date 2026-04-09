@@ -18,6 +18,13 @@ jobs:
       contents: write
 
     steps:
+      # ---- ワークスペースのリセット（前回の競合を解消）-----------
+      - name: Reset workspace
+        run: |
+          git reset --hard HEAD 2>nul || true
+          git clean -fd 2>nul || true
+        shell: cmd
+
       # ---- リポジトリをチェックアウト ----------------------------
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,8 +58,8 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add tiktok_auto/queue.json tiktok_auto/seen_ids.json tiktok_auto/hashtag_index.json
+          git add tiktok_auto/queue.json tiktok_auto/seen_ids.json tiktok_auto/hashtag_index.json tiktok_auto/posts_log.json
           git diff --staged --quiet || git commit -m "chore: auto queue update [skip ci]"
-          git pull --no-rebase
+          git pull --rebase
           git push
         shell: cmd
