@@ -119,12 +119,29 @@ def run(video_path: str, caption: str):
                 safe_print("ERROR:ログインページ。sessionid期限切れ", flush=True)
                 sys.exit(1)
 
+            # チュートリアル・オーバーレイを除去（react-joyride等）
+            try:
+                page.evaluate("""() => {
+                    const overlays = document.querySelectorAll(
+                        '[data-test-id="overlay"], .react-joyride__overlay, [class*="joyride"], [class*="tutorial"], [class*="walkthrough"]'
+                    );
+                    overlays.forEach(el => el.remove());
+                }""")
+                safe_print("INFO:オーバーレイ除去完了", flush=True)
+            except Exception:
+                pass
+            try:
+                page.keyboard.press('Escape')
+                time.sleep(0.5)
+            except Exception:
+                pass
+
             # ファイル選択ダイアログをインターセプトしてファイルをセット
             # TikTokのReactハンドラを正しく起動させるため、実際のボタンクリックを使う
             upload_triggered = False
             try:
                 with page.expect_file_chooser(timeout=15000) as fc_info:
-                    # アップロードボタンやドラッグエリアをクリック
+                    # アップロードボタンやドラッグエリアをクリック（force=Trueでオーバーレイを無視）
                     for up_sel in [
                         '[data-e2e="upload-btn"]',
                         'button:has-text("アップロード")',
@@ -135,7 +152,7 @@ def run(video_path: str, caption: str):
                         try:
                             el = page.locator(up_sel).first
                             if el.is_visible(timeout=2000):
-                                el.click()
+                                el.click(force=True)
                                 break
                         except Exception:
                             continue
@@ -158,7 +175,6 @@ def run(video_path: str, caption: str):
                 file_input.set_input_files(video_path)
                 # React の onChange イベントを手動発火
                 page.evaluate("""el => {
-                    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'files').set;
                     const event = new Event('change', { bubbles: true });
                     el.dispatchEvent(event);
                     const inputEvent = new Event('input', { bubbles: true });
@@ -240,6 +256,16 @@ def run(video_path: str, caption: str):
                 # ページ上の全ボタンをデバッグ出力
                 all_btns = page.evaluate("() => Array.from(document.querySelectorAll('button, [role=button]')).map(b => b.innerText.trim() + '|' + (b.getAttribute('data-e2e') || ''))")
                 safe_print(f"ERROR:投稿ボタンが見つかりませんでした。ページ上のボタン: {all_btns[:10]}", flush=True)
+                # デバッグ用スクショ保存
+                try:
+                    import pathlib
+                    ss_dir = pathlib.Path(__file__).parent / "screenshots"
+                    ss_dir.mkdir(exist_ok=True)
+                    ss_path = str(ss_dir / f"debug_{int(time.time())}.png")
+                    page.screenshot(path=ss_path, full_page=True)
+                    safe_print(f"INFO:スクショ保存: {ss_path}", flush=True)
+                except Exception as ss_e:
+                    safe_print(f"INFO:スクショ失敗: {ss_e}", flush=True)
                 sys.exit(1)
 
             # 投稿成功を確認（最大60秒）
