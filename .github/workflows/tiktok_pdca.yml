@@ -2,7 +2,7 @@ name: TikTok PDCA
 
 on:
   schedule:
-    - cron: '0 1 * * 1'  # 毎週月曜 10:00 JST
+    - cron: '0 1 * * *'  # 毎日 10:00 JST
   workflow_dispatch:      # 手動実行
 
 jobs:
@@ -13,13 +13,23 @@ jobs:
       contents: write
 
     steps:
+      - name: Reset workspace
+        run: |
+          git reset --hard HEAD 2>nul || true
+          git clean -fd 2>nul || true
+        shell: cmd
+
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Fetch TikTok session from Chrome
+        run: |
+          for /f "delims=" %%i in ('C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe tiktok_auto\get_session.py') do set SID=%%i
+          if "%SID%"=="NOT_FOUND" (echo [WARNING] sessionid not found in Chrome) else if "%SID%"=="DECRYPT_FAIL" (echo [WARNING] sessionid decrypt failed) else (echo TIKTOK_SESSION_ID=%SID%>> %GITHUB_ENV%)
+        shell: cmd
+
       - name: Collect analytics
         env:
-          TIKTOK_SESSION_ID:     ${{ secrets.TIKTOK_SESSION_ID }}
-          TIKTOK_EXTRA_COOKIES:  ${{ secrets.TIKTOK_EXTRA_COOKIES }}
           GEMINI_API_KEY:        ${{ secrets.GEMINI_API_KEY }}
         run: |
           cd tiktok_auto
@@ -40,6 +50,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add tiktok_auto/posts_log.json tiktok_auto/pdca_report.json tiktok_auto/config.py
           git diff --staged --quiet || git commit -m "chore: PDCA update [skip ci]"
-          git pull --no-rebase
+          git pull --rebase
           git push
         shell: cmd

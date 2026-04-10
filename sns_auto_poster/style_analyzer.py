@@ -161,6 +161,10 @@ def _summarize_styles(styles):
 
 
 # ─── メイン実行 ───────────────────────────────────────────
+MAX_ANALYSES_PER_RUN = 3   # 1回の実行あたりの最大Gemini呼び出し数（クォータ節約）
+SKIP_IF_STYLES_ENOUGH = 25  # この件数以上蓄積済みなら分析をスキップ
+
+
 def run(competitor_stats):
     """
     competitor_stats: account_stats.jsonのaccountsデータ
@@ -168,10 +172,14 @@ def run(competitor_stats):
     """
     print("\n=== 競合画像スタイル分析 ===")
     guide = load_style_guide()
-    existing_urls = {s.get("source_url") for s in guide["styles"]}
 
+    # 十分なデータが蓄積済みなら分析スキップ（Geminiクォータ節約）
+    if len(guide["styles"]) >= SKIP_IF_STYLES_ENOUGH:
+        print(f"  スタイルデータ{len(guide['styles'])}件蓄積済み → 分析スキップ")
+        return guide
+
+    existing_urls = {s.get("source_url") for s in guide["styles"]}
     analyzed_count = 0
-    from urllib.parse import quote
     from competitor_tracker import get_user_id
 
     active_accounts = [
@@ -179,7 +187,11 @@ def run(competitor_stats):
         if e.get("status") == "active"
     ]
 
-    for username in active_accounts[:8]:  # 最大8アカウント（API節約）
+    for username in active_accounts[:8]:
+        if analyzed_count >= MAX_ANALYSES_PER_RUN:
+            print(f"  1回あたりの上限({MAX_ANALYSES_PER_RUN}件)に達したため終了")
+            break
+
         print(f"  @{username} の画像を取得中...")
         user_id = get_user_id(username)
         if not user_id:
@@ -191,10 +203,12 @@ def run(competitor_stats):
             time.sleep(1)
             continue
 
-        # いいね順にソートして上位3件を分析
         image_posts.sort(key=lambda p: p.get("like_count", 0) or 0, reverse=True)
 
         for post in image_posts[:3]:
+            if analyzed_count >= MAX_ANALYSES_PER_RUN:
+                break
+
             url = post.get("media_url")
             if not url or url in existing_urls:
                 continue
@@ -204,11 +218,10 @@ def run(competitor_stats):
             if not style:
                 continue
 
-            # 商品宣伝・アカウントブランディング画像をスキップ
             if style.get("skip"):
                 reason = style.get("skip_reason", "不明")
                 print(f"    ⏭️  スキップ: {reason}")
-                existing_urls.add(url)  # 再分析しないようURLは記録
+                existing_urls.add(url)
                 continue
 
             style["like_count"] = post.get("like_count", 0)
@@ -218,7 +231,7 @@ def run(competitor_stats):
             analyzed_count += 1
             print(f"    ✅ {style.get('atmosphere')} / {style.get('background_type')} / score={style.get('overall_quality_score')}")
 
-            time.sleep(13)  # Gemini API レート制限 (5RPM)
+            time.sleep(13)  # Gemini API レート制限
 
         time.sleep(2)
 

@@ -134,6 +134,7 @@ def fetch_and_enqueue() -> int:
             "caption_override": "",
             "added_at":         datetime.now().isoformat(),
             "status":           "pending",
+            "hashtag":          hashtag,
         })
         seen.add(post_id)
         added += 1

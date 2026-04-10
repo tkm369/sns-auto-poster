@@ -36,17 +36,16 @@ jobs:
           C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe -m playwright install chromium
         shell: cmd
 
+      # ---- ChromeからTikTokセッションIDを自動取得 ---------------
+      - name: Fetch TikTok session from Chrome
+        run: |
+          for /f "delims=" %%i in ('C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe tiktok_auto\get_session.py') do set SID=%%i
+          if "%SID%"=="NOT_FOUND" (echo [WARNING] sessionid not found in Chrome) else if "%SID%"=="DECRYPT_FAIL" (echo [WARNING] sessionid decrypt failed) else (echo TIKTOK_SESSION_ID=%SID%>> %GITHUB_ENV%)
+        shell: cmd
+
       # ---- 新着取得 → 動画生成 → TikTok投稿 -------------------
       - name: Run post job
         env:
-          TIKTOK_SESSION_ID:      ${{ secrets.TIKTOK_SESSION_ID }}
-          X_API_KEY:              ${{ secrets.X_API_KEY }}
-          X_API_SECRET:           ${{ secrets.X_API_SECRET }}
-          X_ACCESS_TOKEN:         ${{ secrets.X_ACCESS_TOKEN }}
-          X_ACCESS_TOKEN_SECRET:  ${{ secrets.X_ACCESS_TOKEN_SECRET }}
-          THREADS_ACCESS_TOKEN:   ${{ secrets.THREADS_ACCESS_TOKEN }}
-          THREADS_USER_ID:        ${{ secrets.THREADS_USER_ID }}
-          TIKTOK_EXTRA_COOKIES:   ${{ secrets.TIKTOK_EXTRA_COOKIES }}
           GEMINI_API_KEY:         ${{ secrets.GEMINI_API_KEY }}
         run: |
           cd tiktok_auto

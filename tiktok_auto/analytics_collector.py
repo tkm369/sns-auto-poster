@@ -87,6 +87,21 @@ def _update_log(log: list, analytics_data: list):
                 continue
 
 
+def trim_posts_log(keep: int = 500):
+    """posts_log.json を最新keep件に絞る（古いエントリを削除）"""
+    if not os.path.exists(POSTS_LOG_FILE):
+        return
+    with open(POSTS_LOG_FILE, "r", encoding="utf-8") as f:
+        log = json.load(f)
+    if len(log) <= keep:
+        return
+    log = sorted(log, key=lambda x: x.get("posted_at", ""))[-keep:]
+    with open(POSTS_LOG_FILE, "w", encoding="utf-8") as f:
+        json.dump(log, f, ensure_ascii=False, indent=2)
+    logger.info(f"posts_log.json トリム完了: {keep}件に削減")
+
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    trim_posts_log()
     collect_analytics()
