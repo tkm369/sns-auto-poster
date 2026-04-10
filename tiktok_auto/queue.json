@@ -16,17 +16,12 @@
     "fail_count": 2
   },
   {
-    "url": "https://www.threads.net/post/DUzf_-Vk-_R",
-    "caption_override": "",
-    "added_at": "2026-04-08T10:14:57.184346",
-    "status": "done",
-    "processed_at": "2026-04-11T00:01:10.156976"
-  },
-  {
     "url": "https://www.threads.net/post/DURVlgik0me",
     "caption_override": "",
     "added_at": "2026-04-08T10:14:57.184346",
-    "status": "pending"
+    "status": "failed",
+    "processed_at": "2026-04-11T00:18:24.350001",
+    "fail_count": 1
   },
   {
     "url": "https://www.threads.net/post/DTZDN3wCt4s",
@@ -254,6 +249,13 @@
     "hashtag": "復縁占い"
   },
   {
+    "url": "https://www.threads.net/post/DUzf_-Vk-_R",
+    "caption_override": "",
+    "added_at": "2026-04-08T10:14:57.184346",
+    "status": "done",
+    "processed_at": "2026-04-11T00:01:10.156976"
+  },
+  {
     "url": "https://www.threads.net/post/DVi7-b1Eu8D",
     "caption_override": "",
     "added_at": "2026-04-08T10:14:57.184346",
@@ -357,5 +359,19 @@
     "added_at": "2026-04-08T10:14:57.183346",
     "status": "done",
     "processed_at": "2026-04-09T09:50:36.779798"
+  },
+  {
+    "url": "https://www.threads.net/post/DW7YPxAEtEA",
+    "caption_override": "",
+    "added_at": "2026-04-11T00:15:22.992873",
+    "status": "pending",
+    "hashtag": "復縁"
+  },
+  {
+    "url": "https://www.threads.net/post/DUzf_-Vk-_R",
+    "caption_override": "",
+    "added_at": "2026-04-11T00:15:22.992873",
+    "status": "pending",
+    "hashtag": "復縁"
   }
 ]
