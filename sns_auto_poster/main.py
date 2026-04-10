@@ -9,6 +9,7 @@ from generator import get_best_post, get_time_theme
 from poster import post_to_x, post_to_threads
 from logger import add_post, count_posts_today, get_time_slot_stats, get_image_vs_text_stats, get_length_stats, get_image_style_stats, get_image_content_stats, get_post_type_stats, get_pure_image_style_stats
 from config import AFFILIATE_LINK
+from discord_notifier import notify_post_success, notify_post_skip, notify_quota_exceeded, notify_error
 
 MAX_POSTS_PER_DAY = 6  # 上限（実際の当日投稿数は3〜6でランダム）
 
@@ -271,8 +272,10 @@ def generate_mode():
         err_str = str(e)
         if "RESOURCE_EXHAUSTED" in err_str or "quota" in err_str.lower() or "429" in err_str:
             print(f"⚠️  Gemini APIの日次クォータを超過しました")
+            notify_quota_exceeded()
             _save_pending({"skip": True, "reason": "Gemini quota exceeded"})
             return
+        notify_error(f"generate_mode エラー: {err_str[:500]}")
         raise
 
     # Geminiが0-10スケールで返した場合は0-100に正規化
@@ -385,7 +388,10 @@ def post_mode():
         pending = json.load(f)
 
     if pending.get("skip"):
-        print(f"  スキップ: {pending.get('reason', '')}")
+        reason = pending.get('reason', '')
+        print(f"  スキップ: {reason}")
+        if "quota" not in reason.lower():  # quota超過はgenerate側で通知済み
+            notify_post_skip(reason)
         return
 
     post_content = pending["content"]
@@ -436,6 +442,12 @@ def post_mode():
     print(f"  X       : {'✅ 成功' if x_id else '❌ 失敗/スキップ'}")
     print(f"  Threads : {'✅ 成功' if threads_id else '❌ 失敗/スキップ'}")
     print("=" * 40)
+
+    # Discord通知
+    if threads_id:
+        notify_post_success("Threads", post_type or "unknown", post_content)
+    elif not threads_id and not x_id:
+        notify_error("投稿失敗: ThreadsもXも投稿できませんでした")
 
 
 def main():

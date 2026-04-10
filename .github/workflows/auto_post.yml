@@ -36,6 +36,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           AFFILIATE_LINK: ${{ secrets.AFFILIATE_LINK }}
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: cd sns_auto_poster && python main.py --mode=generate
 
       - name: 生成画像・pending_post をコミット（投稿前にURLを確定させる）
@@ -56,6 +57,7 @@ jobs:
           THREADS_ACCESS_TOKEN: ${{ secrets.THREADS_ACCESS_TOKEN }}
           THREADS_USER_ID: ${{ secrets.THREADS_USER_ID }}
           AFFILIATE_LINK: ${{ secrets.AFFILIATE_LINK }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: cd sns_auto_poster && python main.py --mode=post
 
       - name: 投稿ログをコミット
