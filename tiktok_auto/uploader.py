@@ -55,12 +55,19 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
 
     env = os.environ.copy()
 
+    # キャプションをUTF-8の一時ファイル経由で渡す（コマンドライン引数のcp932変換を回避）
+    import tempfile
+    caption_file = tempfile.mktemp(suffix=".txt")
+    with open(caption_file, "w", encoding="utf-8") as f:
+        f.write(caption)
     try:
         result = subprocess.run(
-            [PYTHON, WORKER, video_path, caption],
+            [PYTHON, WORKER, video_path, "--caption-file", caption_file],
             timeout=UPLOAD_TIMEOUT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             env=env,
         )
         output = result.stdout.strip()
@@ -79,6 +86,11 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
     except Exception as e:
         logger.error(f"uploader起動エラー: {e}")
         return False
+    finally:
+        try:
+            os.unlink(caption_file)
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":

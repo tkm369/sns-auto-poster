@@ -217,6 +217,15 @@ def run(video_path: str, caption: str):
 
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        safe_print("ERROR:引数不足 <video_path> <caption>", flush=True)
+        safe_print("ERROR:引数不足 <video_path> <caption または --caption-file path>", flush=True)
         sys.exit(1)
-    run(sys.argv[1], sys.argv[2])
+
+    video = sys.argv[1]
+    if sys.argv[2] == "--caption-file" and len(sys.argv) >= 4:
+        # UTF-8ファイルからキャプションを読む（文字化け回避）
+        with open(sys.argv[3], "r", encoding="utf-8") as f:
+            cap = f.read()
+    else:
+        cap = sys.argv[2]
+
+    run(video, cap)
