@@ -1,0 +1,45 @@
+// AK-47 | 桜嵐 - マテリアルファイル (Source 2 / CS2)
+// このファイルは CS2 Workshop Tools でインポートして使用します。
+// 実際の投稿には Workshop Tools のビジュアルエディタでの調整を推奨します。
+
+Layer0
+{
+    shader "csgo_weapon_finish.vfx"
+
+    // --- テクスチャマップ ---
+    g_tColor        "models/weapons/v_models/ak47/ak47_col"
+    g_tNormal       "models/weapons/v_models/ak47/ak47_nrm"
+    g_tRoughness    "models/weapons/v_models/ak47/ak47_rgh"
+    g_tMetalness    "models/weapons/v_models/ak47/ak47_mtl"
+    g_tAmbientOcclusion "models/weapons/v_models/ak47/ak47_ao"
+    g_tWear         "models/weapons/v_models/ak47/ak47_wear"
+
+    // --- 仕上げの種類 ---
+    // 0 = Solid Color, 1 = Hydrographic, 2 = Spray-Paint
+    // 3 = Anodized, 4 = Anodized Multicolored, 5 = Anodized Airbrushed
+    // 6 = Custom Paint Job, 7 = Patina, 8 = Gunsmith
+    g_nFinishStyle  "4"  // Anodized Multicolored
+
+    // --- ウェアの設定 ---
+    g_flWearProgress        "0.0"    // 0.0 = Factory New, 1.0 = Battle-Scarred
+    g_flWearStrength        "0.8"
+    g_flWearExponent        "1.5"
+
+    // --- カラー調整 ---
+    g_vColorTint    "[1.0 1.0 1.0 1.0]"
+    g_flBrightness  "1.0"
+
+    // --- 金属・反射設定 ---
+    g_flMetalness   "0.6"
+    g_flRoughness   "0.4"
+
+    // --- パターンスケール ---
+    g_vTexCoordOffset   "[0.0 0.0]"
+    g_vTexCoordScale    "[1.0 1.0]"
+    g_flPatternScale    "1.0"
+
+    // --- Workshop メタデータ ---
+    // Finish name (ワークショップ投稿時に記入)
+    // g_sWorkshopDesc  "AK-47 | 桜嵐"
+    // g_sWorkshopTags  "Rifle,AK-47,Japan,Anodized Multicolored"
+}

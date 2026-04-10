@@ -32,3 +32,18 @@ tiktok_auto/output/
 tiktok_auto/browser_profile/
 tiktok_auto/backgrounds/
 tiktok_auto/bgm/
+tiktok_auto/preview_*.png
+tiktok_auto/preview_*.mp4
+tiktok_auto/*.lnk
+
+# 生成画像（GitHubに上げても容量の無駄）
+sns_auto_poster/generated_images/
+
+# 別リポジトリ
+qwen3_tts/
+
+# 一時ファイル
+*.mp4
+*.mp3
+*.wav
+tmp_*.json

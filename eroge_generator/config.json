@@ -1,0 +1,29 @@
+{
+  "title": "放課後の秘密",
+  "genre": "恋愛・学園",
+  "setting": "現代日本の高校",
+  "protagonist": {
+    "name": "主人公",
+    "gender": "male",
+    "description": "平凡な高校3年生。内気だが真面目な性格。"
+  },
+  "heroines": [
+    {
+      "name": "桜井 愛",
+      "age": 17,
+      "role": "幼馴染",
+      "personality": "明るく元気。主人公のことが好き。",
+      "appearance": "茶髪ツインテール、制服姿"
+    },
+    {
+      "name": "月城 雪",
+      "age": 17,
+      "role": "クールな生徒会長",
+      "personality": "表面上は冷たいが、実は優しい。",
+      "appearance": "黒髪ロング、眼鏡"
+    }
+  ],
+  "num_scenes": 5,
+  "tone": "甘くロマンチック",
+  "adult_content": false
+}

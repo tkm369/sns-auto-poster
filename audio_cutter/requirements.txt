@@ -1,0 +1,4 @@
+faster-whisper
+pydub
+static-ffmpeg
+google-genai
