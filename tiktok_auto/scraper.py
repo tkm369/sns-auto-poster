@@ -135,6 +135,8 @@ def extract_text_from_post(url: str) -> str:
             timeout=SCREENSHOT_TIMEOUT,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
         )
         output = result.stdout.strip()
         # TEXT: 以降の全テキストを取得（改行含む投稿に対応）

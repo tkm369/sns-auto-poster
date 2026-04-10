@@ -20,8 +20,27 @@ WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploader_work
 PYTHON = sys.executable
 
 
+GET_SESSION = os.path.join(os.path.dirname(os.path.abspath(__file__)), "get_session.py")
+
+
 def _session_id() -> str:
-    return os.environ.get("TIKTOK_SESSION_ID", "") or config.TIKTOK_SESSION_ID
+    sid = os.environ.get("TIKTOK_SESSION_ID", "") or config.TIKTOK_SESSION_ID
+    if sid and sid != "your_tiktok_session_id":
+        return sid
+    # 環境変数未設定の場合、get_session.py で直接取得
+    try:
+        result = subprocess.run(
+            [PYTHON, GET_SESSION],
+            capture_output=True, text=True, timeout=30
+        )
+        val = result.stdout.strip()
+        if val and val not in ("NOT_FOUND", ""):
+            logger.info("get_session.py からセッションIDを取得しました")
+            os.environ["TIKTOK_SESSION_ID"] = val
+            return val
+    except Exception as e:
+        logger.warning(f"get_session.py 失敗: {e}")
+    return ""
 
 
 def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> bool:

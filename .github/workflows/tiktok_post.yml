@@ -29,13 +29,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ---- 依存ライブラリをインストール --------------------------
-      - name: Install dependencies
-        run: |
-          C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\pip.exe install -r tiktok_auto/requirements.txt
-          C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe -m playwright install chromium
-        shell: cmd
-
       # ---- ChromeからTikTokセッションIDを自動取得 ---------------
       - name: Fetch TikTok session from Chrome
         run: |
