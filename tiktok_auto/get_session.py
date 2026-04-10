@@ -14,8 +14,26 @@ CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
 CDP_PORT    = 9224  # uploader_workerの9223とかぶらないよう別ポート
 
 
+def kill_existing_chrome_on_port():
+    """CDPポートを使用中のChromeを終了"""
+    try:
+        result = subprocess.run(
+            ["netstat", "-ano"], capture_output=True, text=True, timeout=5
+        )
+        for line in result.stdout.splitlines():
+            if f":{CDP_PORT}" in line and "LISTENING" in line:
+                pid = line.strip().split()[-1]
+                subprocess.run(["taskkill", "/F", "/PID", pid], timeout=5)
+                time.sleep(1)
+                break
+    except Exception:
+        pass
+
+
 def get_session_id():
-    # Chrome起動（ヘッドレス相当 + デバッグポート）
+    kill_existing_chrome_on_port()
+
+    # Chrome起動（ヘッドレス + デバッグポート）
     proc = subprocess.Popen(
         [
             CHROME_PATH,
@@ -25,14 +43,16 @@ def get_session_id():
             "--no-default-browser-check",
             "--headless=new",
             f"--remote-allow-origins=http://127.0.0.1:{CDP_PORT}",
+            "--no-sandbox",
+            "--disable-gpu",
         ],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
 
     try:
-        # CDP が起動するまで待つ
-        for _ in range(20):
+        # CDP が起動するまで待つ (最大15秒)
+        for _ in range(30):
             time.sleep(0.5)
             try:
                 with urllib.request.urlopen(
@@ -81,7 +101,10 @@ def get_session_id():
         return None
     finally:
         proc.terminate()
-        proc.wait(timeout=5)
+        try:
+            proc.wait(timeout=5)
+        except Exception:
+            proc.kill()
 
 
 if __name__ == "__main__":
