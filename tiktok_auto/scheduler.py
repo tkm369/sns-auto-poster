@@ -155,15 +155,13 @@ def run_post_job():
     url = item["url"]
     logger.info(f"=== 投稿開始: {url} ===")
 
-    # 処理開始時点でseen_idsに登録（重複投稿防止）
+    # seen_ids チェック（重複投稿防止）
     from fetcher import load_seen, save_seen
     seen = load_seen()
     if url in seen:
         logger.warning(f"既投稿済みURLのためスキップ: {url}")
         mark_item(url, "skipped")
         return
-    seen.add(url)
-    save_seen(seen)
 
     try:
         import time as _time
@@ -203,6 +201,9 @@ def run_post_job():
         logger.info(f"3/3完了: {_time.time()-_t:.1f}秒 ok={ok}")
 
         if ok:
+            # 投稿成功時のみseen_idsに登録（失敗時は再試行できるようにする）
+            seen.add(url)
+            save_seen(seen)
             mark_item(url, "done")
             _log_post(
                 post_id=timestamp,
