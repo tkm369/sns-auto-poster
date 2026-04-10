@@ -144,13 +144,16 @@ def run(video_path: str, caption: str):
                 except Exception:
                     continue
 
-            # 動画処理完了を待つ（最大90秒）
-            for i in range(18):
+            # 動画処理完了を待つ（最大120秒）
+            for i in range(24):
                 time.sleep(5)
                 buttons = page.evaluate("() => Array.from(document.querySelectorAll('button')).map(b => b.innerText.trim())")
                 post_keywords = ["投稿する", "Post", "公開する", "投稿", "公開"]
                 if any(any(k in b for k in post_keywords) for b in buttons):
+                    safe_print(f"INFO:投稿可能ボタン検出: {[b for b in buttons if b][:5]}", flush=True)
                     break
+                if i % 4 == 0:
+                    safe_print(f"INFO:待機中({i*5}秒) ボタン: {[b for b in buttons if b][:5]}", flush=True)
 
             # 投稿ボタンをクリック（disabledが解除されるまで最大60秒待つ）
             clicked = False
@@ -181,7 +184,9 @@ def run(video_path: str, caption: str):
                     continue
 
             if not clicked:
-                safe_print("ERROR:投稿ボタンが見つかりませんでした", flush=True)
+                # ページ上の全ボタンをデバッグ出力
+                all_btns = page.evaluate("() => Array.from(document.querySelectorAll('button, [role=button]')).map(b => b.innerText.trim() + '|' + (b.getAttribute('data-e2e') || ''))")
+                safe_print(f"ERROR:投稿ボタンが見つかりませんでした。ページ上のボタン: {all_btns[:10]}", flush=True)
                 sys.exit(1)
 
             # 投稿成功を確認（最大60秒）
