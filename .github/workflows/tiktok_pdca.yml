@@ -15,8 +15,9 @@ jobs:
     steps:
       - name: Reset workspace
         run: |
-          git reset --hard HEAD 2>nul || true
-          git clean -fd 2>nul || true
+          git reset --hard HEAD 2>nul
+          git clean -fd 2>nul
+          exit 0
         shell: cmd
 
       - name: Checkout
