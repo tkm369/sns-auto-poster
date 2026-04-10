@@ -5,7 +5,7 @@ permissions:
 
 "on":
   schedule:
-    - cron: '30 */2 * * *'  # 2時間ごとに収集（auto_postの30分後）
+    - cron: '0 3,15 * * *'  # 1日2回（JST 12:00・翌0:00）Geminiクォータ節約
   workflow_dispatch:
 
 jobs:
