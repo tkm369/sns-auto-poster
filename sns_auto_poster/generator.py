@@ -106,15 +106,18 @@ def _generate(prompt, max_retries=4):
                 print(f"  レート制限 (429)、{wait}秒待機後リトライ ({attempt+1}/{max_retries})")
                 time.sleep(wait)
 
-            # 503 高負荷 → フォールバックモデルで即リトライ
+            # 503 高負荷 → まず同じモデルで2回待機リトライ、それでもダメならフォールバック
+            # （503は一時的な過負荷のためフォールバックのクォータを使わない）
             elif "503" in err_str or "UNAVAILABLE" in err_str:
-                if use_model != FALLBACK_MODEL:
-                    print(f"  Gemini 503 高負荷 → {FALLBACK_MODEL} にフォールバック ({attempt+1}/{max_retries})")
+                if attempt < 2:
+                    wait = 30 * (attempt + 1)
+                    print(f"  Gemini 503 高負荷、{wait}秒待機後リトライ ({attempt+1}/{max_retries})")
+                    time.sleep(wait)
+                elif use_model != FALLBACK_MODEL:
+                    print(f"  Gemini 503 継続 → {FALLBACK_MODEL} にフォールバック")
                     use_model = FALLBACK_MODEL
                 else:
-                    wait = 30 * (attempt + 1)
-                    print(f"  Gemini 503 継続中、{wait}秒待機後リトライ ({attempt+1}/{max_retries})")
-                    time.sleep(wait)
+                    time.sleep(30)
 
             else:
                 raise
