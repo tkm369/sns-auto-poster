@@ -119,20 +119,29 @@ def run(video_path: str, caption: str):
                 safe_print("ERROR:ログインページ。sessionid期限切れ", flush=True)
                 sys.exit(1)
 
-            # チュートリアル・オーバーレイを除去（react-joyride等）
+            # チュートリアル・オーバーレイを無効化（react-joyride等）
+            # removeだとReactが再描画するため、pointer-eventsをnoneにしてクリックを通過させる
             try:
                 page.evaluate("""() => {
-                    const overlays = document.querySelectorAll(
-                        '[data-test-id="overlay"], .react-joyride__overlay, [class*="joyride"], [class*="tutorial"], [class*="walkthrough"]'
-                    );
-                    overlays.forEach(el => el.remove());
+                    const disable = () => {
+                        document.querySelectorAll(
+                            '[data-test-id="overlay"], .react-joyride__overlay, [class*="joyride"], #react-joyride-portal'
+                        ).forEach(el => {
+                            el.style.pointerEvents = 'none';
+                            el.style.display = 'none';
+                        });
+                    };
+                    disable();
+                    // 500ms後に再度実行（Reactの再描画対策）
+                    setTimeout(disable, 500);
+                    setTimeout(disable, 1500);
                 }""")
-                safe_print("INFO:オーバーレイ除去完了", flush=True)
+                safe_print("INFO:オーバーレイ無効化完了", flush=True)
             except Exception:
                 pass
             try:
                 page.keyboard.press('Escape')
-                time.sleep(0.5)
+                time.sleep(2)  # setTimeout(disable, 1500)が完了するまで待つ
             except Exception:
                 pass
 
@@ -244,7 +253,7 @@ def run(video_path: str, caption: str):
                         safe_print(f"WARN:投稿ボタンがまだdisabledです、force clickします", flush=True)
                         page.evaluate(f"() => document.querySelector('{sel}').click()")
                     else:
-                        btn.click()
+                        btn.click(force=True)  # オーバーレイを無視してクリック
                     clicked = True
                     safe_print(f"INFO:投稿ボタンクリック完了", flush=True)
                     break
