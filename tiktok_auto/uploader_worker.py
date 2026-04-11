@@ -285,12 +285,49 @@ def run(video_path: str, caption: str):
                     safe_print(f"OK:投稿完了 (URL: {url_now})", flush=True)
                     return
 
-                # 「今すぐ投稿」確認ダイアログが出たらクリック
-                for confirm_text in ["今すぐ投稿", "Post now", "Post anyway"]:
+                # 「コンテンツが制限される可能性があります」警告ダイアログを閉じる
+                for warn_sel in [
+                    'button[aria-label="Close"]',
+                    'button[aria-label="閉じる"]',
+                    '[data-e2e="close-icon"]',
+                    'div[role="dialog"] button:has-text("×")',
+                    'div[role="dialog"] svg[data-icon="close"]',
+                ]:
                     try:
-                        btn = page.get_by_text(confirm_text, exact=True).first
-                        if btn.is_visible():
-                            btn.click()
+                        el = page.locator(warn_sel).first
+                        if el.is_visible(timeout=500):
+                            el.click(force=True)
+                            safe_print(f"INFO:警告ダイアログを閉じました", flush=True)
+                            time.sleep(2)
+                            break
+                    except Exception:
+                        pass
+                # ダイアログの×ボタン（SVGアイコン経由）
+                try:
+                    close_btn = page.locator('div[role="dialog"]').locator('button').first
+                    if close_btn.is_visible(timeout=500):
+                        close_btn.click(force=True)
+                        safe_print(f"INFO:警告ダイアログ×を閉じました", flush=True)
+                        time.sleep(2)
+                        # 閉じた後に投稿ボタンを再クリック
+                        for sel2 in ['[data-e2e="post_video_button"]']:
+                            try:
+                                btn2 = page.locator(sel2).first
+                                if btn2.is_visible(timeout=2000):
+                                    btn2.click(force=True)
+                                    safe_print(f"INFO:警告後に投稿ボタン再クリック", flush=True)
+                                    break
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+
+                # 「今すぐ投稿」確認ダイアログが出たらクリック
+                for confirm_text in ["今すぐ投稿", "このまま投稿", "Post now", "Post anyway", "投稿する"]:
+                    try:
+                        btn = page.get_by_text(confirm_text, exact=False).first
+                        if btn.is_visible(timeout=500):
+                            btn.click(force=True)
                             safe_print(f"INFO:確認ダイアログ「{confirm_text}」をクリック", flush=True)
                             time.sleep(5)
                             break
