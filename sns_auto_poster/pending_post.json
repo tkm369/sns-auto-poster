@@ -1,13 +1,4 @@
 {
-  "skip": false,
-  "content": "もし今日午前中に、たった１つの「心の解放」を感じたなら、それは運命のサインです💖\n\nあなたは気づかないうちに、愛される価値を誰かの評価に委ねていたかもしれませんね。心のどこかで「私なんて…」と、本当の自分を隠していませんでしたか？でも本当は、あなたの価値は誰にも揺るがせない、揺るぎないものです。自分を大切にするって、飾らない素の自分を心から受け入れること。\n\nその瞬間、驚くほど軽やかに、理想のパートナーシップがあなたのもとへ引き寄せられるでしょう。今日のこの静かな兆しこそが、その魔法のスタート地点。自分への優しさが、未来の恋愛を創る最も確かな鍵となります。午前の清々しい空気の中で、あなたの愛が目覚めるサインをそっと感じ取ってみてください。\n\nあなたは今、どんな気持ちですか？",
-  "score": 80,
-  "time_slot": "10",
-  "image_filename": "20260412_102532_pure.png",
-  "image_url": "https://files.catbox.moe/r78e9y.png",
-  "image_style": null,
-  "image_content_pattern": null,
-  "length_category": "long",
-  "post_type": "pure_image",
-  "pure_image_style": "pure_shrine"
+  "skip": true,
+  "reason": "Gemini quota exceeded"
 }
