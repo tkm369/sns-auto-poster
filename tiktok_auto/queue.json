@@ -32,17 +32,11 @@
     "fail_count": 2
   },
   {
-    "url": "https://www.threads.net/post/DQ8PLBGk_zB",
-    "caption_override": "",
-    "added_at": "2026-04-08T10:14:57.184346",
-    "status": "done",
-    "processed_at": "2026-04-12T15:13:02.441807"
-  },
-  {
     "url": "https://www.threads.net/post/DVhvDipAHht",
     "caption_override": "",
     "added_at": "2026-04-08T10:14:57.184346",
-    "status": "pending"
+    "status": "skipped",
+    "processed_at": "2026-04-12T16:00:29.618741"
   },
   {
     "url": "https://www.threads.net/post/DVi7-b1Eu8D",
@@ -326,6 +320,55 @@
     "hashtag": "恋愛"
   },
   {
+    "url": "https://www.threads.net/post/DNvGodlXhsg",
+    "caption_override": "",
+    "added_at": "2026-04-12T15:07:32.456458",
+    "status": "pending",
+    "hashtag": "片思い"
+  },
+  {
+    "url": "https://www.threads.net/post/DWake0HkwiU",
+    "caption_override": "",
+    "added_at": "2026-04-12T15:07:32.456458",
+    "status": "pending",
+    "hashtag": "片思い"
+  },
+  {
+    "url": "https://www.threads.net/post/DWY6MfBGszI",
+    "caption_override": "",
+    "added_at": "2026-04-12T15:07:32.456458",
+    "status": "pending",
+    "hashtag": "片思い"
+  },
+  {
+    "url": "https://www.threads.net/post/DTB-YcmD_K9",
+    "caption_override": "",
+    "added_at": "2026-04-12T15:07:32.456458",
+    "status": "pending",
+    "hashtag": "片思い"
+  },
+  {
+    "url": "https://www.threads.net/post/DR_hNw-CW22",
+    "caption_override": "",
+    "added_at": "2026-04-12T15:07:32.456458",
+    "status": "pending",
+    "hashtag": "片思い"
+  },
+  {
+    "url": "https://www.threads.net/post/DV76WZOgRyR",
+    "caption_override": "",
+    "added_at": "2026-04-12T15:07:32.457457",
+    "status": "pending",
+    "hashtag": "片思い"
+  },
+  {
+    "url": "https://www.threads.net/post/DQ8PLBGk_zB",
+    "caption_override": "",
+    "added_at": "2026-04-08T10:14:57.184346",
+    "status": "done",
+    "processed_at": "2026-04-12T15:13:02.441807"
+  },
+  {
     "url": "https://www.threads.net/post/DVYFHCNCR6r",
     "caption_override": "",
     "added_at": "2026-04-08T10:14:57.183346",
@@ -391,45 +434,73 @@
     "processed_at": "2026-04-08T14:37:15.982429"
   },
   {
-    "url": "https://www.threads.net/post/DNvGodlXhsg",
+    "url": "https://www.threads.net/post/DWNxtnYDD5L",
     "caption_override": "",
-    "added_at": "2026-04-12T15:07:32.456458",
+    "added_at": "2026-04-12T16:00:23.189854",
     "status": "pending",
-    "hashtag": "片思い"
+    "hashtag": "失恋"
   },
   {
-    "url": "https://www.threads.net/post/DWake0HkwiU",
+    "url": "https://www.threads.net/post/DVirgIlEaP_",
     "caption_override": "",
-    "added_at": "2026-04-12T15:07:32.456458",
+    "added_at": "2026-04-12T16:00:23.189854",
     "status": "pending",
-    "hashtag": "片思い"
+    "hashtag": "失恋"
   },
   {
-    "url": "https://www.threads.net/post/DWY6MfBGszI",
+    "url": "https://www.threads.net/post/DVtf-xWD1xY",
     "caption_override": "",
-    "added_at": "2026-04-12T15:07:32.456458",
+    "added_at": "2026-04-12T16:00:23.189854",
     "status": "pending",
-    "hashtag": "片思い"
+    "hashtag": "失恋"
   },
   {
-    "url": "https://www.threads.net/post/DTB-YcmD_K9",
+    "url": "https://www.threads.net/post/DVVuD7JgPQe",
     "caption_override": "",
-    "added_at": "2026-04-12T15:07:32.456458",
+    "added_at": "2026-04-12T16:00:23.189854",
     "status": "pending",
-    "hashtag": "片思い"
+    "hashtag": "失恋"
   },
   {
-    "url": "https://www.threads.net/post/DR_hNw-CW22",
+    "url": "https://www.threads.net/post/DTNvsBGEklC",
     "caption_override": "",
-    "added_at": "2026-04-12T15:07:32.456458",
+    "added_at": "2026-04-12T16:00:23.189854",
     "status": "pending",
-    "hashtag": "片思い"
+    "hashtag": "失恋"
   },
   {
-    "url": "https://www.threads.net/post/DV76WZOgRyR",
+    "url": "https://www.threads.net/post/DWEchisEY7M",
     "caption_override": "",
-    "added_at": "2026-04-12T15:07:32.457457",
+    "added_at": "2026-04-12T16:00:23.191028",
     "status": "pending",
-    "hashtag": "片思い"
+    "hashtag": "失恋"
+  },
+  {
+    "url": "https://www.threads.net/post/DVH5U_IEzGl",
+    "caption_override": "",
+    "added_at": "2026-04-12T16:00:23.191028",
+    "status": "pending",
+    "hashtag": "失恋"
+  },
+  {
+    "url": "https://www.threads.net/post/DW6vKWIj2N8",
+    "caption_override": "",
+    "added_at": "2026-04-12T16:00:23.191028",
+    "status": "pending",
+    "hashtag": "失恋"
+  },
+  {
+    "url": "https://www.threads.net/post/DVyFCV1gc8q",
+    "caption_override": "",
+    "added_at": "2026-04-12T16:00:23.191028",
+    "status": "pending",
+    "hashtag": "失恋"
+  },
+  {
+    "url": "https://www.threads.net/post/DU7c_hfks_O",
+    "caption_override": "",
+    "added_at": "2026-04-12T16:00:23.191028",
+    "status": "pending",
+    "hashtag": "失恋"
   }
 ]
