@@ -1,13 +1,5 @@
 [
   {
-    "url": "https://www.threads.net/post/DWpcBqok_HZ",
-    "caption_override": "",
-    "added_at": "2026-04-04T07:54:38.006410",
-    "status": "done",
-    "processed_at": "2026-04-08T10:17:27.208953",
-    "fail_count": 1
-  },
-  {
     "url": "https://www.threads.net/post/DWrXm4rj9yC",
     "caption_override": "",
     "added_at": "2026-04-04T07:54:38.006410",
@@ -24,62 +16,12 @@
     "fail_count": 2
   },
   {
-    "url": "https://www.threads.net/post/DWp4F4_kdFB",
-    "caption_override": "",
-    "added_at": "2026-04-04T07:54:38.006410",
-    "status": "done",
-    "processed_at": "2026-04-08T11:15:21.246044"
-  },
-  {
-    "url": "https://www.threads.net/post/DWoiEELEni5",
-    "caption_override": "",
-    "added_at": "2026-04-08T09:00:24.673409",
-    "status": "done",
-    "processed_at": "2026-04-08T11:20:56.441506"
-  },
-  {
-    "url": "https://www.threads.net/post/DWx5HxolElh",
-    "caption_override": "",
-    "added_at": "2026-04-08T09:00:24.673409",
-    "status": "done",
-    "processed_at": "2026-04-08T11:42:56.087802",
-    "fail_count": 1
-  },
-  {
-    "url": "https://www.threads.net/post/DRwAr1QEZIh",
-    "caption_override": "",
-    "added_at": "2026-04-08T09:00:24.673409",
-    "status": "done",
-    "processed_at": "2026-04-08T12:33:22.328139"
-  },
-  {
-    "url": "https://www.threads.net/post/DTkZBwHkpi8",
-    "caption_override": "",
-    "added_at": "2026-04-08T09:00:24.673409",
-    "status": "done",
-    "processed_at": "2026-04-08T13:34:30.359521"
-  },
-  {
-    "url": "https://www.threads.net/post/DVvn-QVE9__",
-    "caption_override": "",
-    "added_at": "2026-04-08T09:00:24.673409",
-    "status": "done",
-    "processed_at": "2026-04-08T14:28:27.190020"
-  },
-  {
-    "url": "https://www.threads.net/post/DV-G1w8E45I",
-    "caption_override": "",
-    "added_at": "2026-04-08T10:14:57.183346",
-    "status": "done",
-    "processed_at": "2026-04-08T14:37:15.982429"
-  },
-  {
     "url": "https://www.threads.net/post/DWnSdgtjmle",
     "caption_override": "",
     "added_at": "2026-04-08T10:14:57.183346",
     "status": "failed",
-    "processed_at": "2026-04-08T15:01:42.657932",
-    "fail_count": 1
+    "processed_at": "2026-04-12T13:06:28.793062",
+    "fail_count": 2
   },
   {
     "url": "https://www.threads.net/post/DWqqcIgge3T",
@@ -266,5 +208,98 @@
     "caption_override": "",
     "added_at": "2026-04-08T14:34:59.072236",
     "status": "pending"
+  },
+  {
+    "url": "https://www.threads.net/post/DWpcBqok_HZ",
+    "caption_override": "",
+    "added_at": "2026-04-04T07:54:38.006410",
+    "status": "done",
+    "processed_at": "2026-04-08T10:17:27.208953",
+    "fail_count": 1
+  },
+  {
+    "url": "https://www.threads.net/post/DWp4F4_kdFB",
+    "caption_override": "",
+    "added_at": "2026-04-04T07:54:38.006410",
+    "status": "done",
+    "processed_at": "2026-04-08T11:15:21.246044"
+  },
+  {
+    "url": "https://www.threads.net/post/DWoiEELEni5",
+    "caption_override": "",
+    "added_at": "2026-04-08T09:00:24.673409",
+    "status": "done",
+    "processed_at": "2026-04-08T11:20:56.441506"
+  },
+  {
+    "url": "https://www.threads.net/post/DWx5HxolElh",
+    "caption_override": "",
+    "added_at": "2026-04-08T09:00:24.673409",
+    "status": "done",
+    "processed_at": "2026-04-08T11:42:56.087802",
+    "fail_count": 1
+  },
+  {
+    "url": "https://www.threads.net/post/DRwAr1QEZIh",
+    "caption_override": "",
+    "added_at": "2026-04-08T09:00:24.673409",
+    "status": "done",
+    "processed_at": "2026-04-08T12:33:22.328139"
+  },
+  {
+    "url": "https://www.threads.net/post/DTkZBwHkpi8",
+    "caption_override": "",
+    "added_at": "2026-04-08T09:00:24.673409",
+    "status": "done",
+    "processed_at": "2026-04-08T13:34:30.359521"
+  },
+  {
+    "url": "https://www.threads.net/post/DVvn-QVE9__",
+    "caption_override": "",
+    "added_at": "2026-04-08T09:00:24.673409",
+    "status": "done",
+    "processed_at": "2026-04-08T14:28:27.190020"
+  },
+  {
+    "url": "https://www.threads.net/post/DV-G1w8E45I",
+    "caption_override": "",
+    "added_at": "2026-04-08T10:14:57.183346",
+    "status": "done",
+    "processed_at": "2026-04-08T14:37:15.982429"
+  },
+  {
+    "url": "https://www.threads.net/post/DXBFE9wCZg4",
+    "caption_override": "",
+    "added_at": "2026-04-12T13:04:28.516155",
+    "status": "pending",
+    "hashtag": "復縁"
+  },
+  {
+    "url": "https://www.threads.net/post/DXBE_b2EZjf",
+    "caption_override": "",
+    "added_at": "2026-04-12T13:04:28.517156",
+    "status": "pending",
+    "hashtag": "復縁"
+  },
+  {
+    "url": "https://www.threads.net/post/DXBFpxXiWrL",
+    "caption_override": "",
+    "added_at": "2026-04-12T13:04:28.517662",
+    "status": "pending",
+    "hashtag": "復縁"
+  },
+  {
+    "url": "https://www.threads.net/post/DXBBRNZk7sQ",
+    "caption_override": "",
+    "added_at": "2026-04-12T13:04:28.517662",
+    "status": "pending",
+    "hashtag": "復縁"
+  },
+  {
+    "url": "https://www.threads.net/post/DUVZviQkqKR",
+    "caption_override": "",
+    "added_at": "2026-04-12T13:04:28.517662",
+    "status": "pending",
+    "hashtag": "復縁"
   }
 ]
