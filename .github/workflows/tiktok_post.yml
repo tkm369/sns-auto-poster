@@ -12,13 +12,12 @@ on:
 
 jobs:
   post:
-    runs-on: self-hosted   # 自分のPCで実行（住宅IP）
-    timeout-minutes: 20    # 20分でジョブ全体を強制終了
+    runs-on: self-hosted
+    timeout-minutes: 20
     permissions:
       contents: write
 
     steps:
-      # ---- ワークスペースのリセット（前回の競合を解消）-----------
       - name: Reset workspace
         run: |
           git rebase --abort 2>nul
@@ -29,33 +28,29 @@ jobs:
           exit 0
         shell: cmd
 
-      # ---- リポジトリをチェックアウト ----------------------------
       - name: Checkout
         uses: actions/checkout@v4
 
-      # ---- ChromeからTikTokセッションIDを自動取得 ---------------
       - name: Fetch TikTok session from Chrome
         run: |
           for /f "delims=" %%i in ('C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe tiktok_auto\get_session.py') do set SID=%%i
           if "%SID%"=="NOT_FOUND" (echo [WARNING] sessionid not found in Chrome) else if "%SID%"=="DECRYPT_FAIL" (echo [WARNING] sessionid decrypt failed) else (echo TIKTOK_SESSION_ID=%SID%>> %GITHUB_ENV%)
         shell: cmd
 
-      # ---- 新着取得 → 動画生成 → TikTok投稿 -------------------
       - name: Run post job
         env:
-          GEMINI_API_KEY:         ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           cd tiktok_auto
           C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe post_job.py
         shell: cmd
 
-      # ---- queue.json / seen_ids.json をコミット ---------------
-      - name: Commit state update
+      - name: Commit state
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add tiktok_auto/queue.json tiktok_auto/seen_ids.json tiktok_auto/hashtag_index.json tiktok_auto/posts_log.json
-          git diff --staged --quiet || git commit -m "chore: auto queue update [skip ci]"
+          git add tiktok_auto/posts_log.json tiktok_auto/strategy.json
+          git diff --staged --quiet || git commit -m "chore: 投稿ログ更新 [skip ci]"
           git fetch origin
           if exist .git\rebase-merge rmdir /s /q .git\rebase-merge 2>nul
           git rebase origin/master

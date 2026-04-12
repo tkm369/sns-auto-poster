@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "updated_at": "",
+  "categories": {
+    "片思い":     {"weight": 1.0, "avg_likes": null, "post_count": 0},
+    "失恋":       {"weight": 1.0, "avg_likes": null, "post_count": 0},
+    "復縁":       {"weight": 1.0, "avg_likes": null, "post_count": 0},
+    "恋愛あるある": {"weight": 1.0, "avg_likes": null, "post_count": 0},
+    "元カレ元カノ": {"weight": 1.0, "avg_likes": null, "post_count": 0},
+    "好きな人":   {"weight": 1.0, "avg_likes": null, "post_count": 0},
+    "寂しい夜":   {"weight": 1.0, "avg_likes": null, "post_count": 0},
+    "恋愛名言":   {"weight": 1.0, "avg_likes": null, "post_count": 0}
+  },
+  "insights": "データ蓄積中",
+  "generation_params": {
+    "tone": "共感型",
+    "format": "独白",
+    "length_range": [50, 80]
+  }
+}

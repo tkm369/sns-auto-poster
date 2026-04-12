@@ -1,57 +1,165 @@
 """
-post_job.py - タスクスケジューラから呼ばれる1投稿スクリプト
+post_job.py - GitHub Actionsから呼ばれる1投稿スクリプト
+
+【フロー】
+  1. strategy.jsonを読み込む（PDCA学習結果）
+  2. Geminiでオリジナルコンテンツを生成
+  3. 動画を合成
+  4. TikTokに投稿
+  5. posts_log.jsonに記録
 """
-import sys, os, time, json, logging
+import sys
+import os
+import time
+import json
+import hashlib
+import logging
+from datetime import datetime
 from logging.handlers import RotatingFileHandler
+
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-LOG_FILE   = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tiktok_auto.log")
-QUEUE_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "queue.json")
+import config
+from content_generator import generate_content, load_strategy
+from card_generator import generate_card
+from composer import compose_video
+from uploader import upload_to_tiktok
 
-# ログローテーション: 5MB × 3世代
-rotating_handler = RotatingFileHandler(
-    LOG_FILE, maxBytes=5 * 1024 * 1024, backupCount=3, encoding="utf-8"
-)
+# ------------------------------------------------------------------ #
+#  ログ設定
+# ------------------------------------------------------------------ #
+LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tiktok_auto.log")
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
-    handlers=[rotating_handler, logging.StreamHandler()],
+    handlers=[
+        RotatingFileHandler(LOG_FILE, maxBytes=5*1024*1024, backupCount=3, encoding="utf-8"),
+        logging.StreamHandler(),
+    ],
 )
 logger = logging.getLogger(__name__)
 
-
-def cleanup_queue(keep_done: int = 200):
-    """done/skipped が古い順に溢れたら削除。pending/failed は全件保持。"""
-    if not os.path.exists(QUEUE_FILE):
-        return
-    with open(QUEUE_FILE, "r", encoding="utf-8") as f:
-        queue = json.load(f)
-
-    active   = [i for i in queue if i["status"] in ("pending", "failed")]
-    finished = [i for i in queue if i["status"] not in ("pending", "failed")]
-
-    if len(finished) > keep_done:
-        # 古い順に捨てる（added_at昇順の末尾keep_done件だけ残す）
-        finished = sorted(finished, key=lambda x: x.get("added_at", ""))[-keep_done:]
-        removed = len(queue) - len(active) - len(finished)
-        logger.info(f"queue.json クリーンアップ: {removed}件削除")
-
-    with open(QUEUE_FILE, "w", encoding="utf-8") as f:
-        json.dump(active + finished, f, ensure_ascii=False, indent=2)
+# ------------------------------------------------------------------ #
+#  posts_log 管理
+# ------------------------------------------------------------------ #
+POSTS_LOG = os.path.join(os.path.dirname(os.path.abspath(__file__)), "posts_log.json")
 
 
-# ----- メイン -----
-from fetcher import fetch_and_enqueue
-from scheduler import run_post_job
+def _load_log() -> list:
+    if os.path.exists(POSTS_LOG):
+        with open(POSTS_LOG, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return []
 
-cleanup_queue()
 
-logger.info("=== STEP1: fetch_and_enqueue 開始 ===")
-t0 = time.time()
-fetch_and_enqueue()
-logger.info(f"=== STEP1完了: {time.time()-t0:.1f}秒 ===")
+def _save_log(log: list):
+    with open(POSTS_LOG, "w", encoding="utf-8") as f:
+        json.dump(log, f, ensure_ascii=False, indent=2)
 
-logger.info("=== STEP2: run_post_job 開始 ===")
-t1 = time.time()
-run_post_job()
-logger.info(f"=== STEP2完了: {time.time()-t1:.1f}秒 ===")
+
+def _is_duplicate(text: str) -> bool:
+    """同じテキストが過去に投稿済みか確認"""
+    h = hashlib.md5(text.strip().encode("utf-8")).hexdigest()
+    return any(p.get("text_hash") == h for p in _load_log())
+
+
+def _record_post(text: str, category: str, tone: str, fmt: str):
+    log = _load_log()
+    now = datetime.now()
+    log.append({
+        "id":           now.strftime("%Y%m%d_%H%M%S"),
+        "posted_at":    now.isoformat(),
+        "text":         text,
+        "text_hash":    hashlib.md5(text.strip().encode("utf-8")).hexdigest(),
+        "category":     category,
+        "tone":         tone,
+        "format":       fmt,
+        "posting_hour": now.hour,
+        "video_duration": config.VIDEO_DURATION,
+        # メトリクスは analytics_collector.py が後から埋める
+        "views":        None,
+        "likes":        None,
+        "comments":     None,
+        "last_checked": None,
+    })
+    # 最新500件に絞る
+    if len(log) > 500:
+        log = log[-500:]
+    _save_log(log)
+
+
+# ------------------------------------------------------------------ #
+#  メイン
+# ------------------------------------------------------------------ #
+
+def main():
+    logger.info("=== 投稿ジョブ開始 ===")
+    t_start = time.time()
+
+    # 1. 戦略読み込み
+    strategy = load_strategy()
+    logger.info(f"戦略: tone={strategy['generation_params'].get('tone')} "
+                f"format={strategy['generation_params'].get('format')} "
+                f"insights={strategy.get('insights', '')[:40]}")
+
+    # 2. コンテンツ生成（リトライ最大3回）
+    content = None
+    for attempt in range(3):
+        try:
+            candidate = generate_content(strategy)
+            text = candidate["text"]
+
+            if not text or len(text) < 20:
+                logger.warning(f"生成テキストが短すぎる ({attempt+1}/3): {repr(text)}")
+                continue
+
+            if _is_duplicate(text):
+                logger.warning(f"重複テキストのため再生成 ({attempt+1}/3)")
+                continue
+
+            content = candidate
+            break
+        except Exception as e:
+            logger.warning(f"コンテンツ生成エラー ({attempt+1}/3): {e}")
+            time.sleep(2)
+
+    if content is None:
+        logger.error("コンテンツ生成に3回失敗。中断します。")
+        sys.exit(1)
+
+    text     = content["text"]
+    category = content["category"]
+    tone     = content["tone"]
+    fmt      = content["format"]
+
+    logger.info(f"生成完了 [{category} / {tone} / {fmt}]")
+    logger.info(f"テキスト: {text}")
+
+    # 3. カード画像生成
+    os.makedirs(config.SCREENSHOTS_DIR, exist_ok=True)
+    os.makedirs(config.OUTPUT_DIR, exist_ok=True)
+    ts       = datetime.now().strftime("%Y%m%d_%H%M%S")
+    card_path = os.path.join(config.SCREENSHOTS_DIR, f"card_{ts}.png")
+    generate_card(text, card_path)
+    logger.info(f"カード生成: {card_path}")
+
+    # 4. 動画合成
+    video_path = os.path.join(config.OUTPUT_DIR, f"tiktok_{ts}.mp4")
+    caption    = config.TIKTOK_CAPTION_TEMPLATE.format(text=text)
+    compose_video(card_path, video_path, caption_text=caption, duration=config.VIDEO_DURATION)
+    logger.info(f"動画合成: {video_path}")
+
+    # 5. TikTokアップロード
+    logger.info("TikTokにアップロード中...")
+    ok = upload_to_tiktok(video_path, caption)
+
+    if ok:
+        _record_post(text, category, tone, fmt)
+        logger.info(f"=== 投稿成功 [{category}] {time.time()-t_start:.0f}秒 ===")
+    else:
+        logger.error(f"=== 投稿失敗 {time.time()-t_start:.0f}秒 ===")
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
