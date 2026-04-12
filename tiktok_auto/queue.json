@@ -28,8 +28,8 @@
     "caption_override": "",
     "added_at": "2026-04-08T10:14:57.183346",
     "status": "failed",
-    "processed_at": "2026-04-12T14:37:23.492920",
-    "fail_count": 1
+    "processed_at": "2026-04-12T14:57:31.405381",
+    "fail_count": 2
   },
   {
     "url": "https://www.threads.net/post/DVYFHCNCR6r",
@@ -247,6 +247,34 @@
     "hashtag": "復縁"
   },
   {
+    "url": "https://www.threads.net/post/DW_IahoGHBq",
+    "caption_override": "",
+    "added_at": "2026-04-12T14:33:14.411182",
+    "status": "pending",
+    "hashtag": "復縁したい"
+  },
+  {
+    "url": "https://www.threads.net/post/DW8n8miEv4q",
+    "caption_override": "",
+    "added_at": "2026-04-12T14:33:14.411182",
+    "status": "pending",
+    "hashtag": "復縁したい"
+  },
+  {
+    "url": "https://www.threads.net/post/DLoW6RMy5KC",
+    "caption_override": "",
+    "added_at": "2026-04-12T14:33:14.412181",
+    "status": "pending",
+    "hashtag": "復縁したい"
+  },
+  {
+    "url": "https://www.threads.net/post/DVi7-b1Eu8D",
+    "caption_override": "",
+    "added_at": "2026-04-12T14:33:14.413182",
+    "status": "pending",
+    "hashtag": "復縁したい"
+  },
+  {
     "url": "https://www.threads.net/post/DWpcBqok_HZ",
     "caption_override": "",
     "added_at": "2026-04-04T07:54:38.006410",
@@ -303,33 +331,5 @@
     "added_at": "2026-04-08T10:14:57.183346",
     "status": "done",
     "processed_at": "2026-04-08T14:37:15.982429"
-  },
-  {
-    "url": "https://www.threads.net/post/DW_IahoGHBq",
-    "caption_override": "",
-    "added_at": "2026-04-12T14:33:14.411182",
-    "status": "pending",
-    "hashtag": "復縁したい"
-  },
-  {
-    "url": "https://www.threads.net/post/DW8n8miEv4q",
-    "caption_override": "",
-    "added_at": "2026-04-12T14:33:14.411182",
-    "status": "pending",
-    "hashtag": "復縁したい"
-  },
-  {
-    "url": "https://www.threads.net/post/DLoW6RMy5KC",
-    "caption_override": "",
-    "added_at": "2026-04-12T14:33:14.412181",
-    "status": "pending",
-    "hashtag": "復縁したい"
-  },
-  {
-    "url": "https://www.threads.net/post/DVi7-b1Eu8D",
-    "caption_override": "",
-    "added_at": "2026-04-12T14:33:14.413182",
-    "status": "pending",
-    "hashtag": "復縁したい"
   }
 ]
