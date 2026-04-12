@@ -1,4 +1,13 @@
 {
-  "skip": true,
-  "reason": "Gemini quota exceeded"
+  "skip": false,
+  "content": "9割の人が気づかない、真に愛されるための秘密。それはあなたの内側にあります。\n\n誰かに愛されたいと願うほど、なぜか孤独を感じてしまう…そんな経験はありませんか？実は、真に人を惹きつける磁力となるのは、あなたの内側から溢れる「自己愛」のエネルギーなのです。\n\nあなたの心には、すでに無限の愛の泉が湧き出ています。誰かの評価を求めず、ただその泉を自分自身で満たしてあげること。その瞬間から、あなたは自分を丸ごと愛せるようになり、その輝きが、同じように光り輝く素敵な魂を引き寄せるのです。運命の歯車は、そうして自然と動き出すでしょう。\n\n今夜、自分の気持ちと向き合ってみてください。",
+  "score": 80,
+  "time_slot": "14",
+  "image_filename": "20260412_142319_pure.png",
+  "image_url": "https://raw.githubusercontent.com/tkm369/sns-auto-poster/master/sns_auto_poster/generated_images/20260412_142319_pure.png",
+  "image_style": null,
+  "image_content_pattern": null,
+  "length_category": "long",
+  "post_type": "pure_image",
+  "pure_image_style": "pure_shrine"
 }
