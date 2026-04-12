@@ -5,8 +5,7 @@ Discord通知モジュール
 """
 import os
 import json
-import urllib.request
-import urllib.error
+import requests
 from datetime import datetime
 
 WEBHOOK_URL = os.environ.get("DISCORD_WEBHOOK_URL", "")
@@ -18,15 +17,11 @@ def _send(payload: dict) -> bool:
         print("  [Discord] DISCORD_WEBHOOK_URL未設定、スキップ")
         return False
     try:
-        data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(
-            WEBHOOK_URL,
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        with urllib.request.urlopen(req, timeout=10) as res:
-            return res.status in (200, 204)
+        res = requests.post(WEBHOOK_URL, json=payload, timeout=10)
+        if res.status_code in (200, 204):
+            return True
+        print(f"  [Discord] 送信失敗: {res.status_code} {res.text[:100]}")
+        return False
     except Exception as e:
         print(f"  [Discord] 送信失敗: {e}")
         return False
