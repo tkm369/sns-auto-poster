@@ -69,5 +69,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260412_171956",
+    "posted_at": "2026-04-12T17:19:56.412706",
+    "text": "好きな人の連絡先があるのに、送れない夜がある。",
+    "text_hash": "9e78e16b4ec2f4117be0ceca645456ca",
+    "category": "片思い",
+    "tone": "共感型",
+    "format": "独白",
+    "posting_hour": 17,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
