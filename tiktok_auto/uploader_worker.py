@@ -91,6 +91,7 @@ def run(video_path: str, caption: str):
     chrome_proc = subprocess.Popen([
         CHROME_PATH,
         f"--remote-debugging-port={CDP_PORT}",
+        f"--remote-debugging-address=127.0.0.1",
         f"--user-data-dir={DEBUG_PROFILE}",
         "--no-first-run",
         "--no-default-browser-check",
@@ -100,12 +101,23 @@ def run(video_path: str, caption: str):
         "--hide-crash-restore-bubble",
         "about:blank",
     ])
-    time.sleep(3)
+    # Chromeが起動してCDPポートが開くまで待つ
+    import urllib.request as _ureq
+    for _wait in range(15):
+        time.sleep(1)
+        try:
+            _ureq.urlopen(f"http://127.0.0.1:{CDP_PORT}/json/version", timeout=2)
+            safe_print(f"INFO:Chrome CDP ready ({_wait+1}秒)", flush=True)
+            break
+        except Exception:
+            pass
+    else:
+        safe_print("WARN:Chrome CDP起動確認タイムアウト（続行）", flush=True)
 
     try:
         from playwright.sync_api import sync_playwright
         with sync_playwright() as p:
-            browser = p.chromium.connect_over_cdp(f"http://localhost:{CDP_PORT}", timeout=10000)
+            browser = p.chromium.connect_over_cdp(f"http://127.0.0.1:{CDP_PORT}", timeout=10000)
             context = browser.contexts[0] if browser.contexts else browser.new_context()
             page = context.new_page()
 
