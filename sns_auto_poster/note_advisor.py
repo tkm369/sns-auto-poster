@@ -92,7 +92,7 @@ def generate_note_proposals(top_posts: list, follower_count: int) -> list:
     "description": "どんな内容か2〜3行で説明",
     "target": "こんな人に刺さる（ターゲット読者）",
     "price": 推奨価格（数字のみ、300〜980の範囲）,
-    "why": "なぜ今これが売れるか（1行）"
+    "why": "なぜ今これが売れるか（エンゲージデータの根拠を含めて2〜3行。例：『〇〇の投稿が205viewsと高反応だったことから〜』のように具体的な数字を使って説明）"
   }},
   ...
 ]
@@ -129,10 +129,10 @@ def notify_note_proposals(proposals: list, follower_count: int, top_posts: list)
         fields.append({
             "name": f"💡 提案{i}：{p['title']}",
             "value": (
-                f"📖 {p['description']}\n"
-                f"👤 {p['target']}\n"
-                f"💰 推奨価格: ¥{p['price']}\n"
-                f"🔥 {p['why']}"
+                f"📖 **内容**: {p['description']}\n"
+                f"👤 **ターゲット**: {p['target']}\n"
+                f"💰 **推奨価格**: ¥{p['price']}\n"
+                f"📊 **売れる根拠**: {p['why']}"
             ),
         })
 
