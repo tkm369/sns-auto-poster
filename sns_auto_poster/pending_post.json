@@ -1,13 +1,4 @@
 {
-  "skip": false,
-  "content": "あの人の「なぜ？」、もう悩まなくていい。その答え、今朝、あなたの直感が掴むはず。🌙\n\nあの人の言葉や態度に、心を揺さぶられることはありませんか？ふとした視線や言葉の裏に、ずっと解けなかったパズルのピースが隠されていると感じませんか？表面的にはそっけない態度でも、その行動の奥には、あなたへの強い想いや、臆病な心が潜んでいることがあります。その見えない壁に、もどかしさを感じるのは当然です。胸の奥に秘められた、本当の想いを見抜きたいと願う気持ち、痛いほどわかります。しかし、その胸の違和感は、真実に近づいているサインです。今朝の目覚めは、あなたに特別な直感を授けているはず。心の目を閉じて、その内なる声に耳を傾けてみてください。隠された真実が、夜明けと共にゆっくりと姿を現し始めるでしょう。あなたの心が感じる違和感は、もう迷う必要のない羅針盤です。\n\nこんな気持ち、あなたにも覚えがありますか？",
-  "score": 75,
-  "time_slot": "02",
-  "image_filename": "20260413_025522_pure.png",
-  "image_url": "https://raw.githubusercontent.com/tkm369/sns-auto-poster/master/sns_auto_poster/generated_images/20260413_025522_pure.png",
-  "image_style": null,
-  "image_content_pattern": null,
-  "length_category": "long",
-  "post_type": "pure_image",
-  "pure_image_style": "pure_shrine"
+  "skip": true,
+  "reason": "直近の投稿から2.1時間しか経過していません（最低3時間必要）"
 }
