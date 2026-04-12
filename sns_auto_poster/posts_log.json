@@ -799,5 +799,21 @@
     "pure_image_style": "pure_shrine",
     "metrics": null,
     "metrics_collected": false
+  },
+  {
+    "id": "17922912150306127",
+    "platform": "threads",
+    "timestamp": "2026-04-13T06:55:04.524029+09:00",
+    "content": "今朝、あなたの心をかすめた、たった一つの予感。それは、あなたの人生をがらりと変える「運命の合図」です。\n\n誰もが「気のせい」と片付けてしまいがちな、その小さな胸の高鳴り。でも、それはあなただけの特別な輝きが目覚めようとしている証拠。長らく眠っていたあなたの魅力が、今日、動き出す合図なのです。その直感を信じて一歩踏み出すことで、これまで想像もしなかった素敵な出会いや、ずっと温めてきた恋が、いよいよ現実になるかもしれません。\n\n今日のキーワードは「直感への信頼」。あなたの内なる光が、最高の恋愛運をきっと引き寄せるでしょう。\n\nふと思い出したとき、また読み返してみてください。",
+    "time_slot": "06",
+    "has_affiliate": false,
+    "has_image": true,
+    "image_style": null,
+    "image_content_pattern": null,
+    "length_category": "long",
+    "post_type": "pure_image",
+    "pure_image_style": "pure_sunset_sea",
+    "metrics": null,
+    "metrics_collected": false
   }
 ]
