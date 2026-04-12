@@ -57,10 +57,13 @@ def _save_log(log: list):
         json.dump(log, f, ensure_ascii=False, indent=2)
 
 
+def _posted_hashes() -> set:
+    return {p.get("text_hash") for p in _load_log() if p.get("text_hash")}
+
 def _is_duplicate(text: str) -> bool:
     """同じテキストが過去に投稿済みか確認"""
     h = hashlib.md5(text.strip().encode("utf-8")).hexdigest()
-    return any(p.get("text_hash") == h for p in _load_log())
+    return h in _posted_hashes()
 
 
 def _record_post(text: str, category: str, tone: str, fmt: str):
@@ -103,10 +106,11 @@ def main():
                 f"insights={strategy.get('insights', '')[:40]}")
 
     # 2. コンテンツ生成（リトライ最大3回）
+    hashes = _posted_hashes()
     content = None
     for attempt in range(3):
         try:
-            candidate = generate_content(strategy)
+            candidate = generate_content(strategy, posted_hashes=hashes)
             text = candidate["text"]
 
             if not text or len(text) < 20:

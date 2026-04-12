@@ -128,9 +128,9 @@ def run(video_path: str, caption: str):
             page.goto("https://www.tiktok.com/tiktokstudio/upload", timeout=30000)
             time.sleep(6)
 
-            if "login" in page.url.lower():
-                safe_print("ERROR:ログインページ。sessionid期限切れ", flush=True)
-                sys.exit(1)
+            if "login" in page.url.lower() or "passport" in page.url.lower():
+                safe_print("ERROR:SESSION_EXPIRED:TikTokセッションID期限切れ。手動でsessionidを更新してください", flush=True)
+                sys.exit(2)  # exit code 2 = セッション切れ（1=一般エラーと区別）
 
             # チュートリアル・オーバーレイを無効化（react-joyride等）
             # removeだとReactが再描画するため、pointer-eventsをnoneにしてクリックを通過させる

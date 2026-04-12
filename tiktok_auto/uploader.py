@@ -73,6 +73,9 @@ def upload_to_tiktok(video_path: str, caption: str, headless: bool = False) -> b
         output = result.stdout.strip()
         for line in output.splitlines():
             logger.info(f"[worker] {line}")
+        if result.returncode == 2 or "SESSION_EXPIRED" in output:
+            logger.error("=== TikTokセッションID期限切れ ===\nChrome で TikTok にログインし直してください。")
+            return False
         if result.returncode == 0 and "OK:" in output:
             return True
         else:
