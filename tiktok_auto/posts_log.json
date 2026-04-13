@@ -144,5 +144,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260413_090552",
+    "posted_at": "2026-04-13T09:05:52.117601",
+    "text": "深夜のコンビニで、レジの人に「ありがとう」って言うだけで少し救われた。",
+    "text_hash": "82793f7ac82cc87c131f995ee55f3abe",
+    "category": "寂しい夜",
+    "tone": "共感型",
+    "format": "独白",
+    "posting_hour": 9,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
