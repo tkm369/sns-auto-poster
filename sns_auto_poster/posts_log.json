@@ -911,5 +911,21 @@
     "pure_image_style": "pure_dragon",
     "metrics": null,
     "metrics_collected": false
+  },
+  {
+    "id": "17906128602224891",
+    "platform": "threads",
+    "timestamp": "2026-04-15T01:01:23.622918+09:00",
+    "content": "好きな人の前だと、うまく話せない。\nそれは弱さじゃなくて、本気のサイン。\nありのままのあなたで、十分魅力的。",
+    "time_slot": "00",
+    "has_affiliate": false,
+    "has_image": true,
+    "image_style": null,
+    "image_content_pattern": null,
+    "length_category": "long",
+    "post_type": "pure_image",
+    "pure_image_style": "pure_sunset_sea",
+    "metrics": null,
+    "metrics_collected": false
   }
 ]
