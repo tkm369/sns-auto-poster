@@ -189,5 +189,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260415_210926",
+    "posted_at": "2026-04-15T21:09:26.672964",
+    "text": "うまくいかなかった恋が、自分を作ってきたと最近思う。",
+    "text_hash": "501653d85bb98b069147c0461cda7adf",
+    "category": "恋愛名言",
+    "tone": "共感型",
+    "format": "独白",
+    "posting_hour": 21,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
