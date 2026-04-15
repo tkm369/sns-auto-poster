@@ -15,7 +15,8 @@ CDP_PORT    = 9224  # uploader_workerの9223とかぶらないよう別ポート
 
 
 def kill_existing_chrome_on_port():
-    """CDPポートを使用中のChromeを終了"""
+    """CDPポートまたはtiktok_debug_profileを使用中のChromeを終了"""
+    # ポートで使用中のChromeを終了
     try:
         result = subprocess.run(
             ["netstat", "-ano"], capture_output=True, text=True, timeout=5
@@ -26,6 +27,21 @@ def kill_existing_chrome_on_port():
                 subprocess.run(["taskkill", "/F", "/PID", pid], timeout=5)
                 time.sleep(1)
                 break
+    except Exception:
+        pass
+    # プロファイルを掴んでいるChromeも終了（setup_login.pyの残留プロセスなど）
+    try:
+        result = subprocess.run(
+            ["wmic", "process", "where",
+             f"name='chrome.exe' and commandline like '%tiktok_debug_profile%'",
+             "get", "processid"],
+            capture_output=True, text=True, timeout=10
+        )
+        for line in result.stdout.splitlines():
+            line = line.strip()
+            if line.isdigit():
+                subprocess.run(["taskkill", "/F", "/PID", line], timeout=5)
+        time.sleep(1)
     except Exception:
         pass
 
