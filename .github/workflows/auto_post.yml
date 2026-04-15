@@ -18,8 +18,8 @@ jobs:
     timeout-minutes: 30
 
     steps:
-      - name: ランダム遅延（Bot判定回避：0〜5分のランダム待機）
-        run: sleep $((RANDOM % 300))
+      - name: ランダム遅延（Bot判定回避：0〜45分のランダム待機）
+        run: sleep $((RANDOM % 2700))
 
       - name: リポジトリをチェックアウト
         uses: actions/checkout@v4

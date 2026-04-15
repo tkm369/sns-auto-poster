@@ -31,6 +31,27 @@ IMAGES_DIR = os.path.join(os.path.dirname(__file__), "generated_images")
 
 MIN_POST_INTERVAL_HOURS = 5  # 最低投稿間隔（時間）- スパム判定回避
 
+# ウォームアップモード: アカウント再開後に段階的に投稿数を増やす
+# WARMUP_START_DATE に再開日を "YYYY-MM-DD" 形式で設定する（空文字=無効）
+WARMUP_START_DATE = ""  # 例: "2026-04-18"
+
+def get_warmup_limit() -> int:
+    """ウォームアップ中の1日投稿上限を返す（無効なら-1）"""
+    if not WARMUP_START_DATE:
+        return -1
+    try:
+        jst = pytz.timezone("Asia/Tokyo")
+        start = datetime.fromisoformat(WARMUP_START_DATE).replace(tzinfo=jst)
+        days = (datetime.now(jst) - start).days
+        if days < 3:
+            return 1   # 1〜3日目: 1投稿/日
+        elif days < 6:
+            return 2   # 4〜6日目: 2投稿/日
+        else:
+            return -1  # 7日目以降: 通常モード
+    except Exception:
+        return -1
+
 def _get_last_post_hours_ago() -> float:
     """直近の投稿から何時間経過したか返す（投稿なしの場合は999）"""
     from logger import load_log
@@ -60,9 +81,15 @@ def should_post_now(time_slot):
         return False, f"直近の投稿から{hours_ago:.1f}時間しか経過していません（最低{MIN_POST_INTERVAL_HOURS}時間必要）"
 
     posts_today = count_posts_today()
-    today_limit = get_today_post_limit()
-    if posts_today >= today_limit:
-        return False, f"本日 {posts_today}/{today_limit} 回投稿済み（上限到達）"
+    warmup_limit = get_warmup_limit()
+    if warmup_limit > 0:
+        if posts_today >= warmup_limit:
+            return False, f"ウォームアップ中: 本日 {posts_today}/{warmup_limit} 回投稿済み（上限到達）"
+        today_limit = warmup_limit
+    else:
+        today_limit = get_today_post_limit()
+        if posts_today >= today_limit:
+            return False, f"本日 {posts_today}/{today_limit} 回投稿済み（上限到達）"
 
     stats = get_time_slot_stats()
     slot_stat = stats.get(time_slot)
@@ -463,6 +490,16 @@ def post_mode():
         cleanup_old_images(IMAGES_DIR)
     except Exception:
         pass
+
+    # 自動いいね（投稿成功時のみ・人間らしさ演出）
+    if threads_id:
+        try:
+            import random, time as _time
+            _time.sleep(random.uniform(30, 120))  # 投稿直後すぐにいいねしない
+            from poster import like_threads_posts
+            like_threads_posts(max_likes=random.randint(2, 4))
+        except Exception:
+            pass
 
     print("\n" + "=" * 40)
     print(f"  X       : {'✅ 成功' if x_id else '❌ 失敗/スキップ'}")
