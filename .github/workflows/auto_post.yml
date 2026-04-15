@@ -4,8 +4,8 @@ permissions:
   contents: write
 
 "on":
-  schedule:
-    - cron: '0 */2 * * *'  # 2時間ごとに起動（1日の投稿数は3〜6でランダム）
+  # schedule:
+  #   - cron: '0 */2 * * *'  # 一時停止中（アカウント制限解除待ち）
   workflow_dispatch:        # GitHub上から手動実行も可能
 
 concurrency:
