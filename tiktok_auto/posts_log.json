@@ -264,5 +264,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260417_031816",
+    "posted_at": "2026-04-17T03:18:16.537520",
+    "text": "他の人の話をしてる顔を見るのが、一番つらい。",
+    "text_hash": "6339f00bc76bdcf1660fe8804c505d83",
+    "category": "片思い",
+    "tone": "あるある型",
+    "format": "独白",
+    "posting_hour": 3,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
