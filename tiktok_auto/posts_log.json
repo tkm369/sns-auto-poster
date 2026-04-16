@@ -249,5 +249,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260417_015954",
+    "posted_at": "2026-04-17T01:59:54.601558",
+    "text": "あの人の前だけ、うまく話せなくなる。それだけで好きってわかる。",
+    "text_hash": "bddf6283a66e39c5d7e08755b89a344b",
+    "category": "片思い",
+    "tone": "共感型",
+    "format": "ストーリー",
+    "posting_hour": 1,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
