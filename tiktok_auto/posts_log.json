@@ -204,5 +204,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260416_172422",
+    "posted_at": "2026-04-16T17:24:22.161237",
+    "text": "寝る前だけ、少し弱くなっていい気がしてる。",
+    "text_hash": "5b5f548712914b47b989b0f674ed196d",
+    "category": "寂しい夜",
+    "tone": "励まし型",
+    "format": "独白",
+    "posting_hour": 17,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
