@@ -324,5 +324,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260417_210637",
+    "posted_at": "2026-04-17T21:06:37.248642",
+    "text": "時間が経てば忘れると言われたけど、忘れたくないとも思ってる。",
+    "text_hash": "8370886db366292d8b0e2144c8941847",
+    "category": "失恋",
+    "tone": "励まし型",
+    "format": "問いかけ",
+    "posting_hour": 21,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
