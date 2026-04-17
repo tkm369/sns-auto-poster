@@ -294,5 +294,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260417_172323",
+    "posted_at": "2026-04-17T17:23:23.204456",
+    "text": "元カノと別れてから、同じ曲が聴けなくなった曲がある。",
+    "text_hash": "8a0db89f5bc1e4eb63f9514ed979e4fa",
+    "category": "元カレ元カノ",
+    "tone": "あるある型",
+    "format": "問いかけ",
+    "posting_hour": 17,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
