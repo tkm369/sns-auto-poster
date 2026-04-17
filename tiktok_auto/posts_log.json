@@ -354,5 +354,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260418_014427",
+    "posted_at": "2026-04-18T01:44:27.802055",
+    "text": "あの人のいない生活が、もう普通になりかけてる。それが少し悲しい。",
+    "text_hash": "4cecf9c018f3faf788bd6b3e7c654671",
+    "category": "失恋",
+    "tone": "あるある型",
+    "format": "ストーリー",
+    "posting_hour": 1,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
