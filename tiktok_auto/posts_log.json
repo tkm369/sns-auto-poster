@@ -279,5 +279,20 @@
     "likes": null,
     "comments": null,
     "last_checked": null
+  },
+  {
+    "id": "20260417_090838",
+    "posted_at": "2026-04-17T09:08:38.591157",
+    "text": "大切にされたいなら、まず自分が自分を大切にすることだと気づいた。",
+    "text_hash": "33387c7ab7377268133b3ef864e4da80",
+    "category": "恋愛名言",
+    "tone": "共感型",
+    "format": "ストーリー",
+    "posting_hour": 9,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "last_checked": null
   }
 ]
