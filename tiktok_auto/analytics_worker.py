@@ -146,16 +146,41 @@ def collect():
 
         analytics = []
 
+        # --- APIレスポンスをデバッグ保存 ---
+        try:
+            debug_path = r"C:\actions-runner\debug_api_responses.json"
+            with open(debug_path, "w", encoding="utf-8") as dbf:
+                # 各レスポンスの構造（先頭2件のみ、サイズ制限）
+                debug_data = []
+                for r in api_responses[:5]:
+                    d = r["data"]
+                    debug_data.append({
+                        "url": r["url"],
+                        "top_keys": list(d.keys()) if isinstance(d, dict) else type(d).__name__,
+                        "data_keys": list(d.get("data", {}).keys()) if isinstance(d.get("data"), dict) else None,
+                        "raw_preview": json.dumps(d, ensure_ascii=False)[:500],
+                    })
+                json.dump(debug_data, dbf, ensure_ascii=False, indent=2)
+            safe_print(f"INFO:APIデバッグ保存: {debug_path}", flush=True)
+        except Exception as de:
+            safe_print(f"WARN:デバッグ保存失敗: {de}", flush=True)
+
         # --- Method 1: APIインターセプト ---
         for resp in api_responses:
             data = resp["data"]
+            # すべての可能な構造を試みる
             items = (
                 data.get("aweme_list") or
                 data.get("itemList") or
+                data.get("item_list") or
                 data.get("items") or
+                data.get("videoList") or
                 (data.get("data") or {}).get("aweme_list") or
+                (data.get("data") or {}).get("itemList") or
+                (data.get("data") or {}).get("item_list") or
                 (data.get("data") or {}).get("items") or
                 (data.get("data") or {}).get("list") or
+                (data.get("data") or {}).get("videoList") or
                 []
             )
             for item in items:
@@ -164,12 +189,15 @@ def collect():
                         item.get("statistics") or
                         item.get("stats") or
                         item.get("video_stats") or
+                        item.get("stat") or
                         {}
                     )
                     created = (
                         item.get("create_time") or
                         item.get("createTime") or
-                        item.get("created_at")
+                        item.get("created_at") or
+                        item.get("publish_time") or
+                        item.get("publishTime")
                     )
                     if created:
                         if isinstance(created, (int, float)):
@@ -182,14 +210,17 @@ def collect():
                     views = (
                         stats.get("play_count") or stats.get("playCount") or
                         stats.get("view_count") or stats.get("viewCount") or
-                        stats.get("video_view_count")
+                        stats.get("video_view_count") or
+                        item.get("play_count") or item.get("playCount")
                     )
                     likes = (
                         stats.get("digg_count") or stats.get("diggCount") or
-                        stats.get("like_count") or stats.get("likeCount")
+                        stats.get("like_count") or stats.get("likeCount") or
+                        item.get("digg_count") or item.get("diggCount")
                     )
                     comments = (
-                        stats.get("comment_count") or stats.get("commentCount")
+                        stats.get("comment_count") or stats.get("commentCount") or
+                        item.get("comment_count") or item.get("commentCount")
                     )
 
                     if views is not None or likes is not None:

@@ -79,20 +79,32 @@ def collect_analytics():
 
 def _update_log(log: list, analytics_data: list):
     """取得したアナリティクスデータでログを更新（投稿時刻で照合）"""
+    used_items = set()  # 同じ item を複数エントリに使わない
     for entry in log:
         posted_at = datetime.fromisoformat(entry["posted_at"])
-        for item in analytics_data:
+        best_idx = None
+        best_diff = float("inf")
+        for idx, item in enumerate(analytics_data):
+            if idx in used_items:
+                continue
             try:
                 item_dt = datetime.fromisoformat(item["created_at"])
-                # 投稿時刻が30分以内のものを同一とみなす
-                if abs((posted_at - item_dt).total_seconds()) < 1800:
-                    entry["views"] = item.get("views", entry["views"])
-                    entry["likes"] = item.get("likes", entry["likes"])
-                    entry["comments"] = item.get("comments", entry["comments"])
-                    entry["last_checked"] = datetime.now().isoformat()
-                    break
+                diff = abs((posted_at - item_dt).total_seconds())
+                # 秒精度のタイムスタンプは30分以内、日付だけ(時刻=0:00)なら同日内なら許容
+                midnight = item_dt.hour == 0 and item_dt.minute == 0 and item_dt.second == 0
+                threshold = 86400 if midnight else 1800  # 日付のみなら24時間以内
+                if diff < threshold and diff < best_diff:
+                    best_diff = diff
+                    best_idx = idx
             except Exception:
                 continue
+        if best_idx is not None:
+            item = analytics_data[best_idx]
+            entry["views"] = item.get("views", entry["views"])
+            entry["likes"] = item.get("likes", entry["likes"])
+            entry["comments"] = item.get("comments", entry["comments"])
+            entry["last_checked"] = datetime.now().isoformat()
+            used_items.add(best_idx)
 
 
 def trim_posts_log(keep: int = 500):
