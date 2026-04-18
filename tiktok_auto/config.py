@@ -75,3 +75,17 @@ SCREENSHOTS_DIR = os.path.join(BASE_DIR, "screenshots")   # 一時保存
 OUTPUT_DIR      = os.path.join(BASE_DIR, "output")        # 完成動画
 QUEUE_FILE      = os.path.join(BASE_DIR, "queue.json")    # 投稿キュー
 LOG_FILE        = os.path.join(BASE_DIR, "tiktok_auto.log")
+
+# ---- 音声コンテンツ設定（Qwen3-TTS-Base）-------------------------
+# Qwen3-TTS の venv Python（qwen_tts パッケージはここにインストールされている）
+TTS_PYTHON = r"C:\qwen3tts-jp\Qwen3-TTS-JP\.venv\Scripts\python.exe"
+# 参照音声ファイル: ユーザー自身の声を録音したWAVファイルのパス（16kHz mono 推奨）
+TTS_REF_AUDIO_PATH = r"C:\tiktok_voice_ref.wav"
+# 参照音声の書き起こしテキスト（空のままだと品質が落ちる場合あり）
+TTS_REF_TEXT = ""
+# 音声投稿の割合（0.0〜1.0 / 0.33 = 約1/3を音声投稿に）
+TTS_VOICE_RATIO = 0.33
+# 音声動画のBGMボリューム（通常投稿は0.25、音声投稿は声に被らないよう0.08）
+VOICE_BGM_VOLUME = 0.08
+# 音声ファイルの出力先
+VOICE_OUTPUT_DIR = os.path.join(BASE_DIR, "voice_output")

@@ -1,36 +1,31 @@
 """
-card_generator.py - X(Twitter)風の投稿カード画像を生成
+card_generator.py - 複数スタイルのTikTok用カード画像を生成
+
+スタイル一覧:
+  xdark     - X/Twitter ダークモード（既存）
+  gradient  - ピンク→パープルグラデーション
+  poem      - 詩スタイル（中央寄せ・行間広め）
+  light     - Instagram風ライトカード
+  line_chat - LINE風チャット吹き出し
+  notebook  - ノート罫線スタイル
 """
-import textwrap
-from PIL import Image, ImageDraw, ImageFont
 import os
+import numpy as np
+from PIL import Image, ImageDraw, ImageFont
 
-# カードサイズ
-CARD_WIDTH = 900
-PADDING = 48
-FONT_SIZE_TEXT = 36
-FONT_SIZE_META = 26
-LINE_SPACING = 1.5
-MAX_CHARS_PER_LINE = 22
-
-# X ダークモードカラー
-BG_COLOR       = (0, 0, 0)           # 黒背景
-CARD_COLOR     = (21, 32, 43)        # X dark blue-gray
-TEXT_COLOR     = (231, 233, 234)     # ほぼ白
-META_COLOR     = (113, 118, 123)     # グレー
-BORDER_COLOR   = (47, 51, 54)        # 境界線
-X_LOGO_COLOR   = (231, 233, 234)     # ロゴ色
+CARD_WIDTH  = 900
+CARD_STYLES = ["xdark", "gradient", "poem", "light", "line_chat", "notebook"]
+# voice_title は音声投稿専用（PDCA のカードスタイル選択対象外）
+VOICE_TITLE_STYLE = "voice_title"
 
 
-def _get_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
-    """日本語対応フォントを取得"""
-    candidates = [
-        r"C:\Windows\Fonts\YuGothM.ttc",   # 游ゴシック Medium
-        r"C:\Windows\Fonts\YuGothB.ttc",   # 游ゴシック Bold
-        r"C:\Windows\Fonts\meiryo.ttc",    # メイリオ
-        r"C:\Windows\Fonts\msgothic.ttc",  # MSゴシック
-    ]
-    for path in candidates:
+def _get_font(size: int) -> ImageFont.FreeTypeFont:
+    for path in [
+        r"C:\Windows\Fonts\YuGothM.ttc",
+        r"C:\Windows\Fonts\YuGothB.ttc",
+        r"C:\Windows\Fonts\meiryo.ttc",
+        r"C:\Windows\Fonts\msgothic.ttc",
+    ]:
         if os.path.exists(path):
             try:
                 return ImageFont.truetype(path, size)
@@ -39,86 +34,316 @@ def _get_font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default()
 
 
-def _draw_x_logo(draw: ImageDraw.Draw, x: int, y: int, size: int):
-    """X ロゴを手描き（太い × 記号）"""
-    lw = max(3, size // 8)
-    draw.line([(x, y), (x + size, y + size)], fill=X_LOGO_COLOR, width=lw)
-    draw.line([(x + size, y), (x, y + size)], fill=X_LOGO_COLOR, width=lw)
-
-
-def _wrap_text(text: str, font, max_width: int, draw) -> list[str]:
-    """テキストを幅に合わせて折り返す"""
+def _wrap(text: str, font, max_w: int, draw: ImageDraw.Draw) -> list:
     lines = []
-    for paragraph in text.split("\n"):
-        if not paragraph.strip():
+    for para in text.split("\n"):
+        if not para.strip():
             lines.append("")
             continue
-        words = list(paragraph)  # 日本語は1文字ずつ
-        current = ""
-        for char in words:
-            test = current + char
-            bbox = draw.textbbox((0, 0), test, font=font)
-            if bbox[2] > max_width:
-                if current:
-                    lines.append(current)
-                current = char
+        cur = ""
+        for ch in para:
+            test = cur + ch
+            if draw.textbbox((0, 0), test, font=font)[2] > max_w:
+                if cur:
+                    lines.append(cur)
+                cur = ch
             else:
-                current = test
-        if current:
-            lines.append(current)
+                cur = test
+        if cur:
+            lines.append(cur)
     return lines
 
 
-def generate_card(text: str, save_path: str) -> str:
-    """
-    X風カード画像を生成して save_path に保存
-    戻り値: save_path
-    """
-    font_text = _get_font(FONT_SIZE_TEXT)
-    font_meta = _get_font(FONT_SIZE_META)
+def _mask(img: Image.Image, r: int = 24) -> Image.Image:
+    m = Image.new("L", img.size, 0)
+    ImageDraw.Draw(m).rounded_rectangle(
+        [0, 0, img.width - 1, img.height - 1], radius=r, fill=255
+    )
+    out = img.convert("RGBA")
+    out.putalpha(m)
+    return out
 
-    # 一時的なdrawオブジェクトでテキスト折り返し計算
-    tmp = Image.new("RGB", (CARD_WIDTH, 100))
-    tmp_draw = ImageDraw.Draw(tmp)
 
-    text_max_w = CARD_WIDTH - PADDING * 2
-    lines = _wrap_text(text[:300], font_text, text_max_w, tmp_draw)
+def _lh(draw, font, spacing) -> int:
+    return int(draw.textbbox((0, 0), "あ", font=font)[3] * spacing)
 
-    # 行の高さを計算
-    bbox = tmp_draw.textbbox((0, 0), "あ", font=font_text)
-    line_h = int((bbox[3] - bbox[1]) * LINE_SPACING)
 
-    # カードの高さを計算（アイコン・いいねボタンなし）
-    card_h = PADDING + line_h * len(lines) + PADDING
+# ─────────────────────────────────────────
+# Style 1: xdark  (X/Twitterダークモード)
+# ─────────────────────────────────────────
+def _xdark(text: str, path: str) -> str:
+    PAD, FS, LS = 48, 36, 1.55
+    CARD, FG = (21, 32, 43), (231, 233, 234)
+    font = _get_font(FS)
+    d0 = ImageDraw.Draw(Image.new("RGB", (CARD_WIDTH, 100)))
+    lines = _wrap(text[:300], font, CARD_WIDTH - PAD * 2, d0)
+    lh = _lh(d0, font, LS)
+    h = PAD + lh * len(lines) + PAD
+    img = Image.new("RGB", (CARD_WIDTH, h), CARD)
+    draw = ImageDraw.Draw(img)
+    y = PAD
+    for ln in lines:
+        draw.text((PAD, y), ln, font=font, fill=FG)
+        y += lh
+    _mask(img, 24).save(path, "PNG")
+    return path
 
-    # カード生成
-    img = Image.new("RGB", (CARD_WIDTH, card_h), CARD_COLOR)
+
+# ─────────────────────────────────────────
+# Style 2: gradient  (ピンク→パープルグラデ)
+# ─────────────────────────────────────────
+def _gradient(text: str, path: str) -> str:
+    PAD, FS, LS = 52, 38, 1.65
+    font = _get_font(FS)
+    d0 = ImageDraw.Draw(Image.new("RGB", (CARD_WIDTH, 100)))
+    lines = _wrap(text[:250], font, CARD_WIDTH - PAD * 2, d0)
+    lh = _lh(d0, font, LS)
+    h = PAD * 2 + lh * len(lines)
+
+    # numpy でグラデーション生成（高速）
+    t = np.linspace(0, 1, h)
+    R = (225 - t * 65).clip(0, 255).astype(np.uint8)
+    G = (55  + t * 15).clip(0, 255).astype(np.uint8)
+    B = (125 + t * 95).clip(0, 255).astype(np.uint8)
+    arr = np.stack([R, G, B], axis=1)[:, np.newaxis, :]
+    arr = np.broadcast_to(arr, (h, CARD_WIDTH, 3)).copy()
+    img = Image.fromarray(arr)
+
+    draw = ImageDraw.Draw(img)
+    y = PAD
+    for ln in lines:
+        draw.text((PAD + 2, y + 2), ln, font=font, fill=(0, 0, 0))  # shadow
+        draw.text((PAD, y), ln, font=font, fill=(255, 255, 255))
+        y += lh
+    _mask(img, 28).save(path, "PNG")
+    return path
+
+
+# ─────────────────────────────────────────
+# Style 3: poem  (詩スタイル・中央寄せ)
+# ─────────────────────────────────────────
+def _poem(text: str, path: str) -> str:
+    PAD, FS, LS = 60, 40, 2.1
+    BG, FG, ACC = (12, 10, 22), (240, 235, 255), (155, 95, 218)
+    font = _get_font(FS)
+    d0 = ImageDraw.Draw(Image.new("RGB", (CARD_WIDTH, 100)))
+    lines = _wrap(text[:200], font, CARD_WIDTH - PAD * 2, d0)
+    lh = _lh(d0, font, LS)
+    h = PAD * 2 + 28 + lh * len(lines) + 28
+
+    img = Image.new("RGB", (CARD_WIDTH, h), BG)
+    draw = ImageDraw.Draw(img)
+    draw.line([(PAD, PAD // 2), (CARD_WIDTH - PAD, PAD // 2)], fill=ACC, width=2)
+    draw.line([(PAD, h - PAD // 2), (CARD_WIDTH - PAD, h - PAD // 2)], fill=ACC, width=2)
+
+    y = PAD + 28
+    for ln in lines:
+        if not ln:
+            y += lh
+            continue
+        tw = draw.textbbox((0, 0), ln, font=font)[2]
+        draw.text(((CARD_WIDTH - tw) // 2, y), ln, font=font, fill=FG)
+        y += lh
+    _mask(img, 24).save(path, "PNG")
+    return path
+
+
+# ─────────────────────────────────────────
+# Style 4: light  (Instagram風ライトカード)
+# ─────────────────────────────────────────
+def _light(text: str, path: str) -> str:
+    PAD, FS, LS = 52, 36, 1.65
+    BG, FG, ACC = (255, 255, 255), (30, 30, 30), (210, 70, 110)
+    font = _get_font(FS)
+    d0 = ImageDraw.Draw(Image.new("RGB", (CARD_WIDTH, 100)))
+    lines = _wrap(text[:280], font, CARD_WIDTH - PAD * 2, d0)
+    lh = _lh(d0, font, LS)
+    h = PAD + lh * len(lines) + PAD
+
+    img = Image.new("RGB", (CARD_WIDTH, h), BG)
+    draw = ImageDraw.Draw(img)
+    draw.rectangle([0, 0, 7, h], fill=ACC)                              # アクセントバー
+    draw.rectangle([0, 0, CARD_WIDTH - 1, h - 1], outline=(210, 210, 210), width=1)
+
+    y = PAD
+    for ln in lines:
+        draw.text((PAD, y), ln, font=font, fill=FG)
+        y += lh
+    _mask(img, 20).save(path, "PNG")
+    return path
+
+
+# ─────────────────────────────────────────
+# Style 5: line_chat  (LINE風チャット)
+# ─────────────────────────────────────────
+def _line_chat(text: str, path: str) -> str:
+    PAD, BP, FS, LS = 20, 14, 28, 1.5
+    BG          = (234, 237, 244)
+    CA, CB      = (94, 200, 120), (255, 255, 255)   # A=緑(右)  B=白(左)
+    TA, TB      = (255, 255, 255), (30, 30, 30)
+    font = _get_font(FS)
+    bw = int(CARD_WIDTH * 0.68)
+    d0 = ImageDraw.Draw(Image.new("RGB", (CARD_WIDTH, 100)))
+
+    # 行解析: "A: " / "B: " プレフィックスで振り分け、なければ交互
+    rows = [ln.strip() for ln in text.split("\n") if ln.strip()]
+    bubbles = []
+    for i, row in enumerate(rows):
+        if row.startswith("A:"):
+            side, txt = "a", row[2:].strip()
+        elif row.startswith("B:"):
+            side, txt = "b", row[2:].strip()
+        else:
+            side, txt = ("a" if i % 2 == 0 else "b"), row
+        wrapped = _wrap(txt, font, bw - BP * 2, d0)
+        line_h = _lh(d0, font, LS)
+        bh = BP * 2 + line_h * len(wrapped)
+        bubbles.append((side, wrapped, bh, line_h))
+
+    total_h = PAD * 2 + sum(bh + 12 for _, _, bh, _ in bubbles)
+    img = Image.new("RGB", (CARD_WIDTH, total_h), BG)
     draw = ImageDraw.Draw(img)
 
-    # 本文のみ
-    text_y = PADDING
-    for line in lines:
-        draw.text((PADDING, text_y), line, font=font_text, fill=TEXT_COLOR)
-        text_y += line_h
+    y = PAD
+    for side, wlines, bh, line_h in bubbles:
+        col = CA if side == "a" else CB
+        tc  = TA if side == "a" else TB
+        x   = CARD_WIDTH - PAD - bw if side == "a" else PAD
+        draw.rounded_rectangle([x, y, x + bw, y + bh], radius=16, fill=col)
+        ty = y + BP
+        for ln in wlines:
+            draw.text((x + BP, ty), ln, font=font, fill=tc)
+            ty += line_h
+        y += bh + 12
 
-    # 角丸マスク
-    from PIL import Image as PILImage
-    mask = PILImage.new("L", img.size, 0)
-    mask_draw = ImageDraw.Draw(mask)
-    mask_draw.rounded_rectangle([0, 0, img.width - 1, img.height - 1], radius=24, fill=255)
-    img_rgba = img.convert("RGBA")
-    img_rgba.putalpha(mask)
+    _mask(img, 24).save(path, "PNG")
+    return path
 
-    img_rgba.save(save_path, "PNG")
-    return save_path
+
+# ─────────────────────────────────────────
+# Style 6: notebook  (ノート罫線スタイル)
+# ─────────────────────────────────────────
+def _notebook(text: str, path: str) -> str:
+    PL, PR, PT, FS, LS = 72, 40, 44, 34, 1.85
+    BG   = (255, 253, 238)
+    RULE = (178, 210, 240)
+    MARG = (218, 95, 95)
+    RING = (152, 152, 162)
+    FG   = (38, 38, 58)
+    font = _get_font(FS)
+    d0 = ImageDraw.Draw(Image.new("RGB", (CARD_WIDTH, 100)))
+    lines = _wrap(text[:280], font, CARD_WIDTH - PL - PR, d0)
+    lh = _lh(d0, font, LS)
+    h = PT * 2 + lh * max(len(lines), 4)
+
+    img = Image.new("RGB", (CARD_WIDTH, h), BG)
+    draw = ImageDraw.Draw(img)
+
+    # 罫線
+    ry = PT + lh
+    while ry < h - PT:
+        draw.line([(PL - 10, ry), (CARD_WIDTH - PR, ry)], fill=RULE, width=1)
+        ry += lh
+    # マージン縦線・スパイラルバインダー
+    draw.line([(PL - 10, PT // 2), (PL - 10, h - PT // 2)], fill=MARG, width=2)
+    for ry in range(PT, h - PT + 1, lh):
+        draw.ellipse([14, ry - 7, 30, ry + 7], outline=RING, width=2)
+
+    y = PT
+    for ln in lines:
+        draw.text((PL, y), ln, font=font, fill=FG)
+        y += lh
+    _mask(img, 20).save(path, "PNG")
+    return path
+
+
+# ─────────────────────────────────────────
+# Style 7: voice_title  (音声投稿用タイトルカード)
+# ─────────────────────────────────────────
+def _voice_title(text: str, path: str) -> str:
+    """音声動画専用タイトルカード（エレガントな深色グラデ・大文字中央寄せ）"""
+    PAD_X, PAD_Y = 60, 56
+    FS_MAIN, FS_SUB = 52, 26
+    BG_TOP  = (8, 5, 20)
+    BG_BOT  = (20, 10, 42)
+    FG      = (255, 248, 210)
+    ACC     = (175, 110, 255)
+    GLOW    = (90, 50, 160)
+    SUB_COL = (190, 150, 255)
+    SUBTITLE = "✦ 恋愛音声コンテンツ ✦"
+
+    font_main = _get_font(FS_MAIN)
+    font_sub  = _get_font(FS_SUB)
+    d0 = ImageDraw.Draw(Image.new("RGB", (CARD_WIDTH, 100)))
+
+    lines  = _wrap(text[:50], font_main, CARD_WIDTH - PAD_X * 2, d0)
+    lh     = _lh(d0, font_main, 1.55)
+    sub_h  = _lh(d0, font_sub, 1.4)
+    h      = PAD_Y * 2 + 8 + lh * len(lines) + 32 + sub_h + 8
+
+    # numpy グラデーション背景
+    t = np.linspace(0, 1, h)
+    R = (BG_TOP[0] + (BG_BOT[0] - BG_TOP[0]) * t).clip(0, 255).astype(np.uint8)
+    G = (BG_TOP[1] + (BG_BOT[1] - BG_TOP[1]) * t).clip(0, 255).astype(np.uint8)
+    B = (BG_TOP[2] + (BG_BOT[2] - BG_TOP[2]) * t).clip(0, 255).astype(np.uint8)
+    arr = np.stack([R, G, B], axis=1)[:, np.newaxis, :]
+    arr = np.broadcast_to(arr, (h, CARD_WIDTH, 3)).copy()
+    img = Image.fromarray(arr)
+    draw = ImageDraw.Draw(img)
+
+    # 上下アクセントライン
+    draw.rectangle([0, 0, CARD_WIDTH, 5], fill=ACC)
+    draw.rectangle([0, h - 5, CARD_WIDTH, h], fill=ACC)
+
+    # タイトル（中央寄せ、グロー効果）
+    y = PAD_Y + 8
+    for ln in lines:
+        tw = draw.textbbox((0, 0), ln, font=font_main)[2]
+        x  = (CARD_WIDTH - tw) // 2
+        draw.text((x + 3, y + 3), ln, font=font_main, fill=GLOW)   # shadow/glow
+        draw.text((x, y), ln, font=font_main, fill=FG)
+        y += lh
+
+    # サブタイトル（中央寄せ）
+    y += 20
+    sw = draw.textbbox((0, 0), SUBTITLE, font=font_sub)[2]
+    draw.text(((CARD_WIDTH - sw) // 2, y), SUBTITLE, font=font_sub, fill=SUB_COL)
+
+    _mask(img, 28).save(path, "PNG")
+    return path
+
+
+# ─────────────────────────────────────────
+# Public API
+# ─────────────────────────────────────────
+_DISPATCH = {
+    "xdark":       _xdark,
+    "gradient":    _gradient,
+    "poem":        _poem,
+    "light":       _light,
+    "line_chat":   _line_chat,
+    "notebook":    _notebook,
+    "voice_title": _voice_title,
+}
+
+
+def generate_card(text: str, save_path: str, style: str = "xdark") -> str:
+    """
+    スタイルを指定してカード画像を生成
+    style: "xdark" | "gradient" | "poem" | "light" | "line_chat" | "notebook"
+    """
+    return _DISPATCH.get(style, _xdark)(text, save_path)
 
 
 if __name__ == "__main__":
-    # テスト
-    sample = (
-        "かなり長く付き合って別れた方たちで振った側の気持ちを知りたいです。\n"
-        "色々と理由はあると思いますが、後悔とか復縁したいとか、\n"
-        "この人が1番だったなとか思うことありますか？"
-    )
-    generate_card(sample, "test_card.png")
-    print("test_card.png を生成しました")
+    samples = {
+        "xdark":     "好きな人の連絡先があるのに、送れない夜がある。",
+        "gradient":  "好きな人の前でだけ、うまく話せなくなる。それだけで、好きってわかる。",
+        "poem":      "忘れようとするほど\n思い出す夜がある\nそれが恋だった",
+        "light":     "Q. 失恋した後、どうすればいい？\n\nA. まず、ちゃんと泣くこと。\nそれだけで十分な日もある。",
+        "line_chat": "A: もう連絡しないって決めたのに\nB: また見ちゃったの？\nA: ...うん\nB: それが好きってことじゃん",
+        "notebook":  "好きな人の話題になると\n急に聞き役に回ってしまう\nなんでそうなるんだろう",
+    }
+    for s, txt in samples.items():
+        out = generate_card(txt, f"test_{s}.png", style=s)
+        print(f"{s}: {out}")

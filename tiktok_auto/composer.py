@@ -7,7 +7,7 @@ import random
 import logging
 import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
-from moviepy import VideoFileClip, VideoClip, ImageClip, CompositeVideoClip, AudioFileClip
+from moviepy import VideoFileClip, VideoClip, ImageClip, CompositeVideoClip, AudioFileClip, CompositeAudioClip
 from moviepy.video.fx import Crop, Resize, Loop, CrossFadeIn
 from moviepy.audio.fx import AudioLoop
 
@@ -182,6 +182,127 @@ def compose_video(
     logger.info(f"動画生成完了: {output_path}")
 
     bg_clip.close()
+    final.close()
+    return output_path
+
+
+def compose_voice_video(
+    card_path: str,
+    voice_audio_path: str,
+    output_path: str,
+) -> str:
+    """
+    音声コンテンツ用TikTok動画を生成する。
+
+    card_path        : タイトルカード画像 (PNG, voice_title スタイル推奨)
+    voice_audio_path : TTS で生成した音声ファイル (WAV)
+    output_path      : 出力 MP4 のパス
+
+    動画構成:
+      - 背景動画 (なければグラデーション)
+      - タイトルカードを上寄せオーバーレイ
+      - 音声: TTS 音声メイン + BGM を VOICE_BGM_VOLUME でミックス
+    """
+    # --- 音声クリップから duration を取得 ---
+    voice_clip = AudioFileClip(voice_audio_path)
+    duration   = min(voice_clip.duration + 1.5, 120.0)   # 最大120秒
+    duration   = max(duration, 30.0)                       # 最低30秒
+    logger.info(f"音声動画生成: duration={duration:.1f}s voice={voice_clip.duration:.1f}s")
+
+    # --- 背景動画 ---
+    bg_files = []
+    if os.path.isdir(config.BACKGROUNDS_DIR):
+        bg_files = [
+            f for f in os.listdir(config.BACKGROUNDS_DIR)
+            if f.lower().endswith((".mp4", ".mov", ".avi"))
+        ]
+
+    if bg_files:
+        bg_path = os.path.join(config.BACKGROUNDS_DIR, random.choice(bg_files))
+        logger.info(f"背景動画: {bg_path}")
+        bg_clip = VideoFileClip(bg_path, audio=False)
+        if bg_clip.duration < duration:
+            bg_clip = bg_clip.with_effects([Loop(duration=duration)])
+        else:
+            bg_clip = bg_clip.subclipped(0, duration)
+        target_ar = config.VIDEO_WIDTH / config.VIDEO_HEIGHT
+        bg_ar = bg_clip.w / bg_clip.h
+        if bg_ar > target_ar:
+            new_w = int(bg_clip.h * target_ar)
+            bg_clip = bg_clip.with_effects([Crop(width=new_w, x_center=bg_clip.w / 2)])
+        else:
+            new_h = int(bg_clip.w / target_ar)
+            bg_clip = bg_clip.with_effects([Crop(height=new_h, y_center=bg_clip.h / 2)])
+        bg_clip = bg_clip.with_effects([Resize((config.VIDEO_WIDTH, config.VIDEO_HEIGHT))])
+    else:
+        logger.info("背景動画なし。深色グラデーション背景を生成します。")
+        W, H = config.VIDEO_WIDTH, config.VIDEO_HEIGHT
+        def _dark_grad(t):
+            frame = np.zeros((H, W, 3), dtype=np.uint8)
+            shift = int(t * 5) % H
+            for y in range(H):
+                ratio = ((y + shift) % H) / H
+                frame[y, :] = [int(8 + ratio * 15), int(5 + ratio * 10), int(20 + ratio * 28)]
+            return frame
+        bg_clip = VideoClip(_dark_grad, duration=duration)
+        bg_clip = bg_clip.with_effects([Resize((W, H))])
+
+    # --- タイトルカードをオーバーレイ ---
+    card_target_w = int(config.VIDEO_WIDTH * 0.85)
+    card_img      = prepare_screenshot(card_path, card_target_w)
+    card_array    = np.array(card_img)
+    card_vc       = ImageClip(card_array)
+    card_vc       = card_vc.with_start(0.0).with_duration(duration)
+    card_vc       = card_vc.with_effects([CrossFadeIn(0.3)])
+    x_pos = (config.VIDEO_WIDTH  - card_img.width) // 2
+    y_pos = int(config.VIDEO_HEIGHT * 0.22)   # 上から22%に配置（テキスト読みやすい位置）
+    card_vc = card_vc.with_position((x_pos, y_pos))
+
+    final = CompositeVideoClip([bg_clip, card_vc], size=(config.VIDEO_WIDTH, config.VIDEO_HEIGHT))
+    final = final.with_duration(duration)
+
+    # --- 音声: TTS メイン + BGM をミックス ---
+    bgm_vol   = getattr(config, "VOICE_BGM_VOLUME", 0.08)
+    bgm_files = []
+    if os.path.isdir(BGM_DIR):
+        bgm_files = [
+            f for f in os.listdir(BGM_DIR)
+            if f.lower().endswith((".mp3", ".wav", ".m4a", ".aac"))
+        ]
+
+    if bgm_files:
+        bgm_path = os.path.join(BGM_DIR, random.choice(bgm_files))
+        logger.info(f"BGM: {bgm_path} (vol={bgm_vol})")
+        bgm = AudioFileClip(bgm_path).with_volume_scaled(bgm_vol)
+        if bgm.duration < duration:
+            bgm = bgm.with_effects([AudioLoop(duration=duration)])
+        else:
+            bgm = bgm.subclipped(0, duration)
+        try:
+            mixed = CompositeAudioClip([bgm, voice_clip])
+            final = final.with_audio(mixed)
+        except Exception as e:
+            logger.warning(f"BGMミックス失敗、音声のみ使用: {e}")
+            final = final.with_audio(voice_clip)
+    else:
+        logger.info("BGMなし (C:\\tiktok_bgm\\ にファイルを入れると自動で使用されます)")
+        final = final.with_audio(voice_clip)
+
+    # --- 書き出し ---
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    final.write_videofile(
+        output_path,
+        fps=30,
+        codec="libx264",
+        audio_codec="aac",
+        preset="fast",
+        ffmpeg_params=["-crf", "23"],
+        logger=None,
+    )
+    logger.info(f"音声動画生成完了: {output_path}")
+
+    bg_clip.close()
+    voice_clip.close()
     final.close()
     return output_path
 

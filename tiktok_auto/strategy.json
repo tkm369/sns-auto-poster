@@ -46,10 +46,29 @@
   "insights": "views計測中（22件）。失恋が最高avg 10views",
   "generation_params": {
     "tone": "共感型",
-    "format": "独白",
     "length_range": [
       50,
       80
     ]
+  },
+  "card_style_weights": {
+    "xdark":     1.0,
+    "gradient":  1.0,
+    "poem":      1.0,
+    "light":     1.0,
+    "line_chat": 1.0,
+    "notebook":  1.0
+  },
+  "format_weights": {
+    "独白":      1.0,
+    "問いかけ":  1.0,
+    "ストーリー": 1.0,
+    "qa":        1.0,
+    "dialogue":  1.0
+  },
+  "voice_format_weights": {
+    "fortune":    1.0,
+    "psychology": 1.0,
+    "advice":     1.0
   }
 }

@@ -17,12 +17,14 @@ BASE_DIR      = os.path.dirname(os.path.abspath(__file__))
 POSTS_LOG     = os.path.join(BASE_DIR, "posts_log.json")
 STRATEGY_FILE = os.path.join(BASE_DIR, "strategy.json")
 
-CATEGORIES = [
+CATEGORIES    = [
     "片思い", "失恋", "復縁", "恋愛あるある",
     "元カレ元カノ", "好きな人", "寂しい夜", "恋愛名言",
 ]
-TONES   = ["共感型", "励まし型", "あるある型"]
-FORMATS = ["独白", "問いかけ", "ストーリー"]
+TONES         = ["共感型", "励まし型", "あるある型"]
+FORMATS       = ["独白", "問いかけ", "ストーリー", "qa", "dialogue"]
+CARD_STYLES   = ["xdark", "gradient", "poem", "light", "line_chat", "notebook"]
+VOICE_FORMATS = ["fortune", "psychology", "advice"]   # 音声投稿フォーマット
 
 
 # ------------------------------------------------------------------ #
@@ -53,53 +55,100 @@ def save_strategy(s: dict):
 # ------------------------------------------------------------------ #
 
 def compute_stats(posts: list) -> dict:
-    """カテゴリ・トーン・フォーマット別の平均再生数/いいね数を計算
-    likes が取れない場合は views を代替指標として使用"""
-    # viewsかlikesがある投稿を対象（views優先）
+    """カテゴリ・トーン・フォーマット別の平均を計算
+    エンゲージメントスコア = いいね×1 + 保存×3 + コメント×5（TikTokアルゴリズム重み付け）
+    いいね等が取れない場合は views を代替指標として使用"""
     measured = [p for p in posts if p.get("views") is not None or p.get("likes") is not None]
     if not measured:
         return {}
 
-    def metric(p):
-        """いいね優先、なければ保存数、なければ再生数を使う"""
-        if p.get("likes") is not None:
-            return p["likes"]
-        if p.get("saves") is not None:
-            return p["saves"]
-        return p.get("views", 0)
+    def engagement_score(p):
+        """TikTokアルゴリズムに近い重み付きエンゲージメントスコア
+        保存・コメントはいいねより拡散への影響が大きい"""
+        likes    = p.get("likes")    or 0
+        saves    = p.get("saves")    or 0
+        comments = p.get("comments") or 0
+        if likes == 0 and saves == 0 and comments == 0:
+            # エンゲージメントが全部0なら再生数を代替指標
+            return p.get("views", 0) * 0.01  # viewsはスケール調整
+        return likes * 1 + saves * 3 + comments * 5
 
     def avg_by(key, choices):
         result = {}
         for val in choices:
-            group = [metric(p) for p in measured if p.get(key) == val]
+            group = [engagement_score(p) for p in measured if p.get(key) == val]
+            if group:
+                result[val] = round(sum(group) / len(group), 2)
+        return result
+
+    def avg_metric_by(metric_key, key, choices):
+        """特定指標の平均をカテゴリ別に集計"""
+        result = {}
+        for val in choices:
+            group = [p.get(metric_key) for p in measured
+                     if p.get(key) == val and p.get(metric_key) is not None]
             if group:
                 result[val] = round(sum(group) / len(group), 1)
         return result
 
-    return {
-        "total_measured": len(measured),
-        "by_category": avg_by("category", CATEGORIES),
-        "by_tone":     avg_by("tone", TONES),
-        "by_format":   avg_by("format", FORMATS),
+    # コンテンツタイプ別の分離
+    card_posts  = [p for p in measured if p.get("content_type", "card") == "card"]
+    voice_posts = [p for p in measured if p.get("content_type") == "voice"]
+
+    result = {
+        "total_measured":  len(measured),
+        "card_posts":      len(card_posts),
+        "voice_posts":     len(voice_posts),
+        # カード投稿のエンゲージメントスコア
+        "by_category":    avg_by("category",   CATEGORIES),
+        "by_tone":        avg_by("tone",        TONES),
+        "by_format":      avg_by("format",      FORMATS),
+        "by_card_style":  avg_by("card_style",  CARD_STYLES),
+        # 音声投稿フォーマット別スコア
+        "by_voice_format": {
+            vf: round(
+                sum(engagement_score(p) for p in voice_posts if p.get("voice_format") == vf)
+                / max(1, len([p for p in voice_posts if p.get("voice_format") == vf])),
+                2,
+            )
+            for vf in VOICE_FORMATS
+            if any(p.get("voice_format") == vf for p in voice_posts)
+        },
+        # コンテンツタイプ別平均スコア
+        "content_type_avg": {
+            "card":  round(sum(engagement_score(p) for p in card_posts)  / max(1, len(card_posts)),  2),
+            "voice": round(sum(engagement_score(p) for p in voice_posts) / max(1, len(voice_posts)), 2),
+        } if voice_posts else {},
+        # 個別指標の平均（Geminiが詳細分析できるように）
+        "avg_views_by_category":    avg_metric_by("views",    "category", CATEGORIES),
+        "avg_likes_by_category":    avg_metric_by("likes",    "category", CATEGORIES),
+        "avg_saves_by_category":    avg_metric_by("saves",    "category", CATEGORIES),
+        "avg_comments_by_category": avg_metric_by("comments", "category", CATEGORIES),
         "by_hour": {
-            h: round(sum(metric(p) for p in measured if p.get("posting_hour") == h)
-                     / len([p for p in measured if p.get("posting_hour") == h]), 1)
+            h: round(sum(engagement_score(p) for p in measured if p.get("posting_hour") == h)
+                     / len([p for p in measured if p.get("posting_hour") == h]), 2)
             for h in range(24)
             if any(p.get("posting_hour") == h for p in measured)
         },
         "recent_posts": [
             {
-                "text": p.get("text", "")[:40],
-                "category": p.get("category"),
-                "tone": p.get("tone"),
-                "format": p.get("format"),
-                "likes": p.get("likes"),
-                "views": p.get("views"),
-                "posted_at": p.get("posted_at", "")[:10],
+                "text":         p.get("text", "")[:40],
+                "content_type": p.get("content_type", "card"),
+                "voice_format": p.get("voice_format"),
+                "category":     p.get("category"),
+                "tone":         p.get("tone"),
+                "format":       p.get("format"),
+                "views":        p.get("views"),
+                "likes":        p.get("likes"),
+                "saves":        p.get("saves"),
+                "comments":     p.get("comments"),
+                "eng_score":    round(engagement_score(p), 1),
+                "posted_at":    p.get("posted_at", "")[:10],
             }
-            for p in sorted(measured, key=lambda x: x.get("posted_at", ""), reverse=True)[:20]
+            for p in sorted(measured, key=lambda x: engagement_score(x), reverse=True)[:20]
         ],
     }
+    return result
 
 
 # ------------------------------------------------------------------ #
@@ -143,15 +192,29 @@ def analyze_with_gemini(stats: dict, current_strategy: dict) -> dict:
     prompt = f"""あなたはTikTokコンテンツの戦略アナリストです。
 以下のパフォーマンスデータを分析し、次の投稿戦略をJSONで出力してください。
 
+【重要】エンゲージメントスコアの算出方法:
+  スコア = いいね×1 + 保存数×3 + コメント数×5
+  ※保存・コメントはTikTokの拡散アルゴリズムへの影響が特に大きい
+
 【パフォーマンスデータ】
 {json.dumps(stats, ensure_ascii=False, indent=2)}
 
 【現在の戦略】
 {json.dumps(current_strategy.get("generation_params", {}), ensure_ascii=False)}
 
+以下の点を重点的に分析してください：
+- by_categoryのエンゲージメントスコアが高いカテゴリ（伸ばすべき）
+- avg_saves_by_categoryが高いカテゴリ（保存されやすい＝バズりやすい）
+- avg_comments_by_categoryが高いカテゴリ（共感・反応されやすい）
+- by_card_styleのスコアが高いスタイル（視覚的に止まるデザイン）
+- by_formatのスコアが高いフォーマット（読み切られやすい形式）
+- by_voice_formatのスコアが高い音声フォーマット（占い/心理解説/アドバイスのどれが伸びるか）
+- content_type_avgでcardとvoiceのどちらが高いか（両者の比較）
+- recent_postsのeng_scoreが高い投稿のtone/format/card_styleの傾向
+
 分析して以下のJSONを出力してください：
 {{
-  "insights": "1〜2文で何が伸びているかの要約",
+  "insights": "1〜2文で何が伸びているかの要約（保存・コメント・スタイルの傾向も含める）",
   "category_weights": {{
     "片思い": 数値(0.1〜3.0),
     "失恋": 数値,
@@ -162,9 +225,28 @@ def analyze_with_gemini(stats: dict, current_strategy: dict) -> dict:
     "寂しい夜": 数値,
     "恋愛名言": 数値
   }},
+  "card_style_weights": {{
+    "xdark": 数値(0.1〜3.0),
+    "gradient": 数値,
+    "poem": 数値,
+    "light": 数値,
+    "line_chat": 数値,
+    "notebook": 数値
+  }},
+  "format_weights": {{
+    "独白": 数値(0.1〜3.0),
+    "問いかけ": 数値,
+    "ストーリー": 数値,
+    "qa": 数値,
+    "dialogue": 数値
+  }},
+  "voice_format_weights": {{
+    "fortune": 数値(0.1〜3.0),
+    "psychology": 数値,
+    "advice": 数値
+  }},
   "generation_params": {{
     "tone": "共感型 or 励まし型 or あるある型",
-    "format": "独白 or 問いかけ or ストーリー",
     "length_range": [最小文字数, 最大文字数]
   }}
 }}
@@ -176,6 +258,53 @@ JSONのみ出力してください。"""
     # JSON抽出
     raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
     return json.loads(raw)
+
+
+# ------------------------------------------------------------------ #
+#  Thompson Sampling データ更新（⑦）
+# ------------------------------------------------------------------ #
+
+def _update_ts_data(strategy: dict, posts: list):
+    """
+    個別投稿の実績からThompson Samplingのalpha/betaを更新。
+    エンゲージメントスコアが全体中央値以上なら「成功」、未満なら「失敗」。
+    alpha/betaは累積加算（リセットしない）。
+    """
+    measured = [p for p in posts
+                if p.get("views") is not None or p.get("likes") is not None]
+    if len(measured) < 5:
+        return
+
+    def eng(p):
+        return ((p.get("likes") or 0) * 1
+                + (p.get("saves") or 0) * 3
+                + (p.get("comments") or 0) * 5)
+
+    scores = sorted(eng(p) for p in measured)
+    median_score = scores[len(scores) // 2]
+
+    def update_for(field, options, ts_key):
+        ts = strategy.setdefault(ts_key, {})
+        for opt in options:
+            group = [p for p in measured if p.get(field) == opt]
+            if not group:
+                ts.setdefault(opt, {"alpha": 1.0, "beta": 1.0})
+                continue
+            successes = sum(1 for p in group if eng(p) >= median_score)
+            failures  = len(group) - successes
+            prev = ts.get(opt, {"alpha": 1.0, "beta": 1.0})
+            ts[opt] = {
+                "alpha": round(prev["alpha"] + successes, 2),
+                "beta":  round(prev["beta"]  + failures,  2),
+            }
+
+    update_for("category",     CATEGORIES,    "ts_category")
+    update_for("card_style",   CARD_STYLES,   "ts_card_style")
+    update_for("format",       FORMATS,       "ts_format")
+    update_for("voice_format", VOICE_FORMATS, "ts_voice_format")
+
+    print(f"TS更新: median_eng={median_score}, "
+          f"measured={len(measured)}件")
 
 
 # ------------------------------------------------------------------ #
@@ -217,18 +346,29 @@ def run():
         print(f"Gemini分析エラー（フォールバック使用）: {e}")
 
     if result is None:
-        # ルールベース: 平均スコアが高いカテゴリのweightを上げる
+        # ルールベース: 平均スコアが高い項目のweightを上げる
         if by_cat:
             max_score = max(by_cat.values()) or 1
             new_weights = {cat: round(1.0 + (by_cat.get(cat, max_score/2) / max_score), 2)
                            for cat in CATEGORIES}
             top_cat = max(by_cat, key=by_cat.get)
+
+            # カードスタイル・フォーマットもルールベースで更新
+            by_style = stats.get("by_card_style", {})
+            by_fmt   = stats.get("by_format", {})
+            style_weights = {s: round(1.0 + (by_style.get(s, 0) / (max(by_style.values()) or 1)), 2)
+                             for s in CARD_STYLES} if by_style else {s: 1.0 for s in CARD_STYLES}
+            fmt_weights   = {f: round(1.0 + (by_fmt.get(f, 0) / (max(by_fmt.values()) or 1)), 2)
+                             for f in FORMATS}   if by_fmt   else {f: 1.0 for f in FORMATS}
+
             result = {
-                "insights": f"views計測中（{stats['total_measured']}件）。{top_cat}が最高avg {by_cat[top_cat]:.0f}views",
-                "category_weights": new_weights,
-                "generation_params": strategy.get("generation_params", {}),
+                "insights": f"計測中（{stats['total_measured']}件）。{top_cat}が最高eng {by_cat[top_cat]:.1f}",
+                "category_weights":   new_weights,
+                "card_style_weights": style_weights,
+                "format_weights":     fmt_weights,
+                "generation_params":  strategy.get("generation_params", {}),
             }
-            print(f"フォールバック結果: {top_cat}が最高（{by_cat[top_cat]:.0f} avg views）")
+            print(f"フォールバック結果: {top_cat}が最高（eng {by_cat[top_cat]:.1f}）")
 
     # strategy.jsonを更新
     strategy["updated_at"] = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -240,16 +380,50 @@ def run():
         if cat in new_weights and cat in strategy.get("categories", {}):
             strategy["categories"][cat]["weight"] = float(new_weights[cat])
 
+    # カードスタイルweightを更新
+    new_style_weights = result.get("card_style_weights", {})
+    if new_style_weights:
+        if "card_style_weights" not in strategy:
+            strategy["card_style_weights"] = {s: 1.0 for s in CARD_STYLES}
+        for s in CARD_STYLES:
+            if s in new_style_weights:
+                strategy["card_style_weights"][s] = float(new_style_weights[s])
+
+    # フォーマットweightを更新
+    new_format_weights = result.get("format_weights", {})
+    if new_format_weights:
+        if "format_weights" not in strategy:
+            strategy["format_weights"] = {f: 1.0 for f in FORMATS}
+        for f in FORMATS:
+            if f in new_format_weights:
+                strategy["format_weights"][f] = float(new_format_weights[f])
+
+    # 音声フォーマットweightを更新
+    new_voice_fmt_weights = result.get("voice_format_weights", {})
+    if new_voice_fmt_weights:
+        if "voice_format_weights" not in strategy:
+            strategy["voice_format_weights"] = {vf: 1.0 for vf in VOICE_FORMATS}
+        for vf in VOICE_FORMATS:
+            if vf in new_voice_fmt_weights:
+                strategy["voice_format_weights"][vf] = float(new_voice_fmt_weights[vf])
+
     # 生成パラメータを更新
     new_params = result.get("generation_params", {})
     if new_params:
         strategy["generation_params"] = new_params
 
+    # ⑦ Thompson Sampling の alpha/beta パラメータを更新
+    _update_ts_data(strategy, posts)
+
     save_strategy(strategy)
     print(f"strategy.json更新完了")
     print(f"insights: {strategy['insights']}")
     print(f"best tone: {strategy['generation_params'].get('tone')}")
-    print(f"best format: {strategy['generation_params'].get('format')}")
+    ts_top = {k: max(strategy.get(f"ts_{k}", {}).items(),
+                     key=lambda x: x[1].get("alpha", 1) / max(x[1].get("alpha", 1) + x[1].get("beta", 1), 1),
+                     default=("?", {}))[0]
+              for k in ("category", "card_style", "format")}
+    print(f"TS推奨: category={ts_top['category']} style={ts_top['card_style']} format={ts_top['format']}")
     print("=== PDCA分析完了 ===")
 
 
