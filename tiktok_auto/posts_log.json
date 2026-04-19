@@ -588,5 +588,25 @@
     "saves": null,
     "shares": null,
     "last_checked": null
+  },
+  {
+    "id": "20260419_232847",
+    "posted_at": "2026-04-19T23:28:47.624143",
+    "content_type": "card",
+    "text": "別れた日から、あの人のいない日常に慣れようとしてる。まだ慣れてない。",
+    "text_hash": "f701d9646a7adb0a502154699fe15a21",
+    "category": "失恋",
+    "tone": "共感型",
+    "format": "独白",
+    "card_style": "xdark",
+    "posting_hour": 23,
+    "text_length": 34,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
