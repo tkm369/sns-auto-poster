@@ -1,5 +1,9 @@
 """
-analytics_collector.py - TikTok Studioから再生数・いいね数を取得してposts_log.jsonを更新する
+analytics_collector.py - TikTok Studioから再生数・いいね数・アカウントレベルメトリクスを取得する
+
+収集データ:
+  posts_log.json        - 各動画の再生数・いいね数・コメント・保存数
+  account_analytics.json - アカウントレベル（プロフィール閲覧数・リーチ・フォロワー獲得など）
 """
 import os
 import sys
@@ -10,7 +14,8 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
-POSTS_LOG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "posts_log.json")
+POSTS_LOG_FILE        = os.path.join(os.path.dirname(os.path.abspath(__file__)), "posts_log.json")
+ACCOUNT_ANALYTICS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "account_analytics.json")
 WORKER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "analytics_worker.py")
 PYTHON = sys.executable
 
@@ -45,15 +50,16 @@ def collect_analytics():
     logger.info(f"アナリティクス取得: {len(targets)}件")
 
     import subprocess
+    # アカウント分析ページも含めるため timeout を延長（コンテンツ20s + 分析15s + 余裕）
     result = subprocess.run(
         [PYTHON, WORKER],
-        capture_output=True, text=True, timeout=120,
+        capture_output=True, text=True, timeout=180,
         env={**os.environ}
     )
 
     # worker出力をそのままログに流す（デバッグ用）
     for line in result.stdout.splitlines():
-        if not line.startswith("ANALYTICS:"):
+        if not line.startswith("ANALYTICS:") and not line.startswith("ACCOUNT_ANALYTICS:"):
             logger.info(f"[worker] {line}")
     if result.stderr:
         for line in result.stderr.splitlines()[:20]:
@@ -63,14 +69,21 @@ def collect_analytics():
         logger.error(f"analytics_worker失敗 (rc={result.returncode})")
         # returncode!=0でもANALYTICSが出力されている場合は続行
 
-    # workerの出力からJSONを取得
+    # workerの出力から各種データを取得
     for line in result.stdout.splitlines():
         if line.startswith("ANALYTICS:"):
             try:
                 data = json.loads(line[10:])
                 _update_log(log, data)
             except Exception as e:
-                logger.error(f"パース失敗: {e}")
+                logger.error(f"ANALYTICSパース失敗: {e}")
+        elif line.startswith("ACCOUNT_ANALYTICS:"):
+            try:
+                acc_data = json.loads(line[18:])
+                if acc_data:
+                    _save_account_analytics(acc_data)
+            except Exception as e:
+                logger.error(f"ACCOUNT_ANALYTICSパース失敗: {e}")
 
     with open(POSTS_LOG_FILE, "w", encoding="utf-8") as f:
         json.dump(log, f, ensure_ascii=False, indent=2)
@@ -107,6 +120,38 @@ def _update_log(log: list, analytics_data: list):
             entry["shares"]   = item.get("shares",   entry.get("shares"))
             entry["last_checked"] = datetime.now().isoformat()
             used_items.add(best_idx)
+
+
+def _save_account_analytics(data: dict, keep: int = 90):
+    """
+    アカウントレベルのメトリクスを account_analytics.json に追記する。
+    collected_at を付与して最新 keep 件だけ保持する。
+    """
+    if not data:
+        return
+    # 既存データを読み込む
+    if os.path.exists(ACCOUNT_ANALYTICS_FILE):
+        try:
+            with open(ACCOUNT_ANALYTICS_FILE, "r", encoding="utf-8") as f:
+                history = json.load(f)
+            if not isinstance(history, list):
+                history = []
+        except Exception:
+            history = []
+    else:
+        history = []
+
+    entry = {"collected_at": datetime.now().isoformat()}
+    entry.update(data)
+    history.append(entry)
+
+    # 最新 keep 件に絞る
+    if len(history) > keep:
+        history = history[-keep:]
+
+    with open(ACCOUNT_ANALYTICS_FILE, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+    logger.info(f"account_analytics.json 更新完了: {entry}")
 
 
 def trim_posts_log(keep: int = 500):
