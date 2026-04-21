@@ -828,5 +828,25 @@
     "saves": 1,
     "shares": 0,
     "last_checked": "2026-04-22T04:56:07.281744"
+  },
+  {
+    "id": "20260422_085650",
+    "posted_at": "2026-04-22T08:56:50.548348",
+    "content_type": "card",
+    "text": "今日も、好きって言えなかった。明日こそと思って、もう何日経つんだろう。",
+    "text_hash": "8515b18c195a993d4ee3ce849218d5a8",
+    "category": "片思い",
+    "tone": "共感型",
+    "format": "問いかけ",
+    "card_style": "xdark",
+    "posting_hour": 8,
+    "text_length": 35,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
