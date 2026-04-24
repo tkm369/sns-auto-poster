@@ -1128,5 +1128,25 @@
     "saves": null,
     "shares": null,
     "last_checked": null
+  },
+  {
+    "id": "20260424_211026",
+    "posted_at": "2026-04-24T21:10:26.913974",
+    "content_type": "card",
+    "text": "傷つけたくなかったのに、傷つけた。その罪悪感が一番消えない。",
+    "text_hash": "db7f7b1b69394585f0a4bc04099f531e",
+    "category": "失恋",
+    "tone": "共感型",
+    "format": "ストーリー",
+    "card_style": "xdark",
+    "posting_hour": 21,
+    "text_length": 30,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
