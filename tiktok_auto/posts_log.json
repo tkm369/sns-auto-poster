@@ -1308,5 +1308,25 @@
     "saves": 2,
     "shares": 0,
     "last_checked": "2026-04-26T03:02:20.799287"
+  },
+  {
+    "id": "20260426_094151",
+    "posted_at": "2026-04-26T09:41:51.424897",
+    "content_type": "card",
+    "text": "偶然会えた日は、奇跡だと思いながら歩いてた。",
+    "text_hash": "9c6f80a49d52ea7226612428cca022bc",
+    "category": "恋愛あるある",
+    "tone": "共感型",
+    "format": "ストーリー",
+    "card_style": "xdark",
+    "posting_hour": 9,
+    "text_length": 22,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
