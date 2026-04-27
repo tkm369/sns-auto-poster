@@ -27,8 +27,9 @@ CATEGORIES = [
     "恋愛名言",
 ]
 
-TONES   = ["共感型", "励まし型", "あるある型"]
-FORMATS = ["独白", "問いかけ", "ストーリー", "list"]
+TONES            = ["共感型", "励まし型", "あるある型"]
+FORMATS          = ["独白", "問いかけ", "ストーリー", "list"]
+CARD_STYLES_PICK = ["xdark", "gradient", "poem", "light", "line_chat", "notebook"]
 
 # Geminiが使えない時のフォールバックコンテンツ（カテゴリ別・各15件以上）
 _FALLBACK = {
@@ -229,6 +230,23 @@ def pick_category(strategy: dict) -> str:
     return random.choices(CATEGORIES, weights=weights, k=1)[0]
 
 
+def _ts_sample(strategy: dict, ts_key: str, options: list) -> str:
+    """Thompson Samplingでオプションを1つ選択（ベータ分布サンプリング）。
+    データが多い勝者を高確率で選びつつ、少数試験済みの探索も維持する。
+    """
+    ts_data = strategy.get(ts_key, {})
+    best, best_val = options[0], -1.0
+    for opt in options:
+        ts = ts_data.get(opt, {"alpha": 1.0, "beta": 1.0})
+        val = random.betavariate(
+            max(float(ts.get("alpha", 1.0)), 0.5),
+            max(float(ts.get("beta",  1.0)), 0.5),
+        )
+        if val > best_val:
+            best_val, best = val, opt
+    return best
+
+
 # ------------------------------------------------------------------ #
 #  Gemini 呼び出し
 # ------------------------------------------------------------------ #
@@ -263,7 +281,7 @@ def _fallback_content(category: str, tone: str, fmt: str, posted_hashes: set = N
             pool = unused_all if unused_all else all_texts
 
     text = random.choice(pool)
-    return {"text": text, "category": category, "tone": tone, "format": fmt}
+    return {"text": text, "category": category, "tone": tone, "format": fmt, "card_style": "xdark"}
 
 
 def _generate_list_content(category: str, posted_hashes: set = None) -> dict:
@@ -329,22 +347,26 @@ def generate_content(strategy: dict = None, posted_hashes: set = None) -> dict:
     if strategy is None:
         strategy = load_strategy()
 
-    category = pick_category(strategy)
-    params   = strategy.get("generation_params", {})
+    category     = pick_category(strategy)
+    params       = strategy.get("generation_params", {})
     length_range = params.get("length_range", [50, 80])
-    insights = strategy.get("insights", "")
 
-    # PDCAデータが蓄積されるまではtone/formatをランダムにしてA/Bテスト
-    if insights in ("データ蓄積中", "", None):
-        tone = random.choice(TONES)
-        fmt  = random.choice(FORMATS)
-    else:
-        tone = params.get("tone", random.choice(TONES))
-        fmt  = params.get("format", random.choice(FORMATS))
+    # フォーマット選択: Thompson Samplingで学習済み勝者を優先
+    fmt = _ts_sample(strategy, "ts_format", FORMATS)
 
-    # list フォーマットは専用関数で処理
+    # list フォーマットは専用関数で処理（card_style=list_card固定）
     if fmt == "list":
         return _generate_list_content(category, posted_hashes)
+
+    # カードスタイル選択: PDCAで学習済みのweightsで重み付き抽選
+    # （未試験スタイルのTS高分散がxdarkを圧迫するため、weightsを使用）
+    cs_weights_map = strategy.get("card_style_weights", {})
+    cs_weights = [max(cs_weights_map.get(s, 1.0), 0.1) for s in CARD_STYLES_PICK]
+    card_style = random.choices(CARD_STYLES_PICK, weights=cs_weights, k=1)[0]
+
+    # トーン: PDCAで学習済みのものを使用（なければランダム）
+    tone = params.get("tone", random.choice(TONES))
+    insights = strategy.get("insights", "")
 
     insight_line = ""
     if insights and insights not in ("データ蓄積中", ""):
@@ -386,4 +408,5 @@ def generate_content(strategy: dict = None, posted_hashes: set = None) -> dict:
         "category": category,
         "tone": tone,
         "format": fmt,
+        "card_style": card_style,
     }
