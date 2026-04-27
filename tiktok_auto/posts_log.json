@@ -1428,5 +1428,25 @@
     "saves": 0,
     "shares": 0,
     "last_checked": "2026-04-27T03:06:28.402627"
+  },
+  {
+    "id": "20260427_091210",
+    "posted_at": "2026-04-27T09:12:10.853792",
+    "content_type": "card",
+    "text": "一緒にいると楽しくて、離れると寂しい。ただそれだけで十分なのかな。",
+    "text_hash": "73c92fa57891eeed6cfc4fbf2eb178ba",
+    "category": "片思い",
+    "tone": "共感型",
+    "format": "ストーリー",
+    "card_style": "xdark",
+    "posting_hour": 9,
+    "text_length": 33,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
