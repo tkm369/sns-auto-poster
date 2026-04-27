@@ -1488,5 +1488,25 @@
     "saves": null,
     "shares": null,
     "last_checked": null
+  },
+  {
+    "id": "20260428_002839",
+    "posted_at": "2026-04-28T00:28:39.217371",
+    "content_type": "card",
+    "text": "「好き」って言葉は、言った後より、言う前が一番重い。",
+    "text_hash": "4dcf7ba567fa1a4f3003336d0ceb94ef",
+    "category": "恋愛名言",
+    "tone": "共感型",
+    "format": "独白",
+    "card_style": "xdark",
+    "posting_hour": 0,
+    "text_length": 26,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
