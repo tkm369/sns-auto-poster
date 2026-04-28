@@ -1,0 +1,96 @@
+[gd_scene load_steps=2 format=3 uid="uid://strip_intro"]
+
+[ext_resource type="Script" path="res://scripts/intro.gd" id="1_intro"]
+
+[node name="Intro" type="Node2D"]
+script = ExtResource("1_intro")
+
+[node name="BgWall" type="ColorRect" parent="."]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.055, 0.032, 0.112, 1)
+
+[node name="BgFloor" type="ColorRect" parent="."]
+offset_left = 0.0
+offset_top = 508.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.072, 0.040, 0.010, 1)
+
+[node name="BgFloorLine" type="ColorRect" parent="."]
+offset_left = 0.0
+offset_top = 506.0
+offset_right = 1280.0
+offset_bottom = 511.0
+color = Color(0.20, 0.11, 0.04, 1)
+
+[node name="TitleLabel" type="Label" parent="."]
+offset_left = 0.0
+offset_top = 18.0
+offset_right = 1280.0
+offset_bottom = 60.0
+text = "秘密の野球拳 ～課外授業の誘惑～"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 28
+theme_override_colors/font_color = Color(1, 0.85, 0.9, 1)
+
+[node name="CharNode" type="Node2D" parent="."]
+position = Vector2(960.0, 325.0)
+
+[node name="CharacterSprite" type="Sprite2D" parent="CharNode"]
+scale = Vector2(0.34, 0.34)
+
+[node name="UILayer" type="CanvasLayer" parent="."]
+
+[node name="DialogueBg" type="ColorRect" parent="UILayer"]
+offset_left = 0.0
+offset_top = 515.0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.0, 0.0, 0.0, 0.88)
+
+[node name="SpeakerBg" type="ColorRect" parent="UILayer"]
+offset_left = 30.0
+offset_top = 504.0
+offset_right = 180.0
+offset_bottom = 526.0
+color = Color(0.45, 0.08, 0.20, 0.95)
+
+[node name="SpeakerLabel" type="Label" parent="UILayer"]
+offset_left = 38.0
+offset_top = 504.0
+offset_right = 180.0
+offset_bottom = 526.0
+text = "ナレーション"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1, 0.85, 0.9, 1)
+
+[node name="DialogueLabel" type="Label" parent="UILayer"]
+offset_left = 38.0
+offset_top = 530.0
+offset_right = 1242.0
+offset_bottom = 680.0
+text = ""
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+autowrap_mode = 2
+
+[node name="ClickHint" type="Label" parent="UILayer"]
+offset_left = 1100.0
+offset_top = 692.0
+offset_right = 1272.0
+offset_bottom = 718.0
+text = "クリックで続ける ▼"
+theme_override_font_sizes/font_size = 13
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+
+[node name="StartButton" type="Button" parent="UILayer"]
+offset_left = 480.0
+offset_top = 628.0
+offset_right = 800.0
+offset_bottom = 680.0
+text = "▶ ゲームを始める！"
+theme_override_font_sizes/font_size = 20
+visible = false

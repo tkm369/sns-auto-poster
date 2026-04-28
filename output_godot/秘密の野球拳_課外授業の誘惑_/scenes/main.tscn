@@ -1,0 +1,241 @@
+[gd_scene load_steps=4 format=3 uid="uid://strip_main"]
+
+[ext_resource type="Script" path="res://scripts/touch_game.gd"     id="1_touch"]
+[ext_resource type="Script" path="res://scripts/character.gd"      id="2_char"]
+[ext_resource type="Script" path="res://scripts/h_scene_viewer.gd" id="3_h"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_touch")
+
+[node name="BgWall" type="ColorRect" parent="."]
+offset_left   = 0.0
+offset_top    = 0.0
+offset_right  = 1280.0
+offset_bottom = 720.0
+color = Color(0.055, 0.032, 0.112, 1)
+
+[node name="BgFloor" type="ColorRect" parent="."]
+offset_left   = 0.0
+offset_top    = 508.0
+offset_right  = 1280.0
+offset_bottom = 720.0
+color = Color(0.072, 0.040, 0.010, 1)
+
+[node name="BgFloorLine" type="ColorRect" parent="."]
+offset_left   = 0.0
+offset_top    = 506.0
+offset_right  = 1280.0
+offset_bottom = 511.0
+color = Color(0.20, 0.11, 0.04, 1)
+
+[node name="BgDesk" type="ColorRect" parent="."]
+offset_left   = 0.0
+offset_top    = 655.0
+offset_right  = 1280.0
+offset_bottom = 720.0
+color = Color(0.048, 0.028, 0.006, 1)
+
+[node name="BgDeskLine" type="ColorRect" parent="."]
+offset_left   = 0.0
+offset_top    = 653.0
+offset_right  = 1280.0
+offset_bottom = 657.0
+color = Color(0.16, 0.09, 0.03, 1)
+
+[node name="Character" type="Node2D" parent="."]
+script   = ExtResource("2_char")
+position = Vector2(640.0, 375.0)
+
+[node name="CharacterSprite" type="Sprite2D" parent="Character"]
+scale = Vector2(0.38, 0.38)
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="MeterBg" type="ColorRect" parent="UI"]
+offset_left   = 15.0
+offset_top    = 10.0
+offset_right  = 725.0
+offset_bottom = 38.0
+color = Color(0.08, 0.04, 0.16, 0.90)
+
+[node name="MeterFill" type="ColorRect" parent="UI"]
+offset_left   = 15.0
+offset_top    = 11.0
+offset_right  = 15.0
+offset_bottom = 37.0
+color = Color(0.25, 0.55, 1.0, 1)
+
+[node name="MeterPct" type="Label" parent="UI"]
+offset_left   = 728.0
+offset_top    = 6.0
+offset_right  = 810.0
+offset_bottom = 42.0
+text = "0%"
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.9, 1, 1)
+
+[node name="MeterLabel" type="Label" parent="UI"]
+offset_left   = 18.0
+offset_top    = 6.0
+offset_right  = 110.0
+offset_bottom = 40.0
+text = "感　度"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.85, 0.65, 1, 1)
+
+[node name="StateLbl" type="Label" parent="UI"]
+offset_left   = 820.0
+offset_top    = 6.0
+offset_right  = 1268.0
+offset_bottom = 42.0
+text = "着衣"
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1, 0.85, 0.92, 1)
+
+[node name="ReactionLbl" type="Label" parent="UI"]
+offset_left   = 180.0
+offset_top    = 50.0
+offset_right  = 1100.0
+offset_bottom = 118.0
+text = ""
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 34
+theme_override_colors/font_color = Color(1, 0.82, 0.92, 1)
+modulate = Color(1, 1, 1, 0)
+
+[node name="HintLbl" type="Label" parent="UI"]
+offset_left   = 320.0
+offset_top    = 568.0
+offset_right  = 960.0
+offset_bottom = 594.0
+text = "あと 70% で脱がせる"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.62, 0.62, 0.62, 1)
+
+[node name="BottomBar" type="HBoxContainer" parent="UI"]
+offset_left   = 12.0
+offset_top    = 596.0
+offset_right  = 1268.0
+offset_bottom = 716.0
+theme_override_constants/separation = 8
+
+[node name="HeadBtn" type="Button" parent="UI/BottomBar"]
+custom_minimum_size = Vector2(0, 106)
+size_flags_horizontal = 3
+text = "💆\n頭・髪"
+theme_override_font_sizes/font_size = 15
+
+[node name="FaceBtn" type="Button" parent="UI/BottomBar"]
+custom_minimum_size = Vector2(0, 106)
+size_flags_horizontal = 3
+text = "🤚\n頬・顔"
+theme_override_font_sizes/font_size = 15
+
+[node name="ChestBtn" type="Button" parent="UI/BottomBar"]
+custom_minimum_size = Vector2(0, 106)
+size_flags_horizontal = 3
+text = "💕\n胸"
+theme_override_font_sizes/font_size = 15
+
+[node name="WaistBtn" type="Button" parent="UI/BottomBar"]
+custom_minimum_size = Vector2(0, 106)
+size_flags_horizontal = 3
+text = "🎀\n腰・裾"
+theme_override_font_sizes/font_size = 15
+
+[node name="KissBtn" type="Button" parent="UI/BottomBar"]
+custom_minimum_size = Vector2(0, 106)
+size_flags_horizontal = 3
+text = "💋\nキス"
+theme_override_font_sizes/font_size = 15
+
+[node name="StripBtn" type="Button" parent="UI/BottomBar"]
+custom_minimum_size = Vector2(0, 106)
+size_flags_horizontal = 3
+disabled = true
+text = "🔥\n脱がす"
+theme_override_font_sizes/font_size = 15
+modulate = Color(0.45, 0.45, 0.45, 0.55)
+
+[node name="HSceneViewer" type="CanvasLayer" parent="."]
+script  = ExtResource("3_h")
+visible = false
+
+[node name="SceneBg" type="ColorRect" parent="HSceneViewer"]
+offset_left   = 0.0
+offset_top    = 0.0
+offset_right  = 1280.0
+offset_bottom = 720.0
+color = Color(0, 0, 0, 1)
+
+[node name="SceneImage" type="TextureRect" parent="HSceneViewer"]
+offset_left   = 0.0
+offset_top    = 0.0
+offset_right  = 1280.0
+offset_bottom = 720.0
+stretch_mode  = 6
+
+[node name="DialogueBox" type="CanvasLayer" parent="HSceneViewer"]
+
+[node name="DialogueBg" type="ColorRect" parent="HSceneViewer/DialogueBox"]
+offset_left   = 0.0
+offset_top    = 620.0
+offset_right  = 1280.0
+offset_bottom = 720.0
+color = Color(0, 0, 0, 0.88)
+
+[node name="SpeakerBg" type="ColorRect" parent="HSceneViewer/DialogueBox"]
+offset_left   = 30.0
+offset_top    = 609.0
+offset_right  = 200.0
+offset_bottom = 630.0
+color = Color(0.5, 0.08, 0.22, 0.92)
+
+[node name="SpeakerLbl" type="Label" parent="HSceneViewer/DialogueBox"]
+offset_left   = 38.0
+offset_top    = 608.0
+offset_right  = 198.0
+offset_bottom = 630.0
+text = "涼子"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(1, 0.85, 0.9, 1)
+
+[node name="DialogueLbl" type="Label" parent="HSceneViewer/DialogueBox"]
+offset_left   = 38.0
+offset_top    = 634.0
+offset_right  = 1060.0
+offset_bottom = 716.0
+text = ""
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+autowrap_mode = 2
+
+[node name="NextBtn" type="Button" parent="HSceneViewer/DialogueBox"]
+offset_left   = 1200.0
+offset_top    = 660.0
+offset_right  = 1272.0
+offset_bottom = 714.0
+text = "次へ▶"
+theme_override_font_sizes/font_size = 14
+
+[node name="CloseBtn" type="Button" parent="HSceneViewer"]
+offset_left   = 1204.0
+offset_top    = 8.0
+offset_right  = 1272.0
+offset_bottom = 48.0
+text = "✕"
+theme_override_font_sizes/font_size = 18
+
+[node name="AutoBtn" type="Button" parent="HSceneViewer"]
+offset_left   = 1080.0
+offset_top    = 8.0
+offset_right  = 1200.0
+offset_bottom = 48.0
+text = "AUTO"
+theme_override_font_sizes/font_size = 14
+
+[node name="AutoTimer" type="Timer" parent="HSceneViewer"]
+wait_time = 3.0
+autostart = false
