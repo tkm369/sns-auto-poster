@@ -1548,5 +1548,25 @@
     "saves": 0,
     "shares": 0,
     "last_checked": "2026-04-28T05:18:20.959252"
+  },
+  {
+    "id": "20260428_164221",
+    "posted_at": "2026-04-28T16:42:21.043004",
+    "content_type": "card",
+    "text": "別れても、その人と笑った記憶だけは返してほしくなかった。",
+    "text_hash": "8d42c26c0aba38e4c9c667ddc7fb281e",
+    "category": "復縁",
+    "tone": "共感型",
+    "format": "独白",
+    "card_style": "xdark",
+    "posting_hour": 16,
+    "text_length": 28,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
