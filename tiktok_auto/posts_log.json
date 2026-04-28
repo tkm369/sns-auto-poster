@@ -1608,5 +1608,25 @@
     "saves": null,
     "shares": null,
     "last_checked": null
+  },
+  {
+    "id": "20260429_012520",
+    "posted_at": "2026-04-29T01:25:20.787654",
+    "content_type": "card",
+    "text": "誰かに「今日どうだった？」って聞いてほしい夜がある。",
+    "text_hash": "934ff5489f0cc3a0c8ccde61faea2f88",
+    "category": "寂しい夜",
+    "tone": "共感型",
+    "format": "独白",
+    "card_style": "xdark",
+    "posting_hour": 1,
+    "text_length": 26,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
