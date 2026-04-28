@@ -1,0 +1,31 @@
+﻿; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
+
+[application]
+
+config/name="秘密の野球拳～課外授業の誘惑～"
+config/description="放課後の誰もいない教室。秘密のゲームに誘われたあなたは、クラスメイトの恋花に触れ、彼女の興奮度を高めてゆく…"
+run/main_scene="res://scenes/intro.tscn"
+config/features=PackedStringArray("4.6", "Forward Plus")
+config/icon="res://icon.svg"
+
+[autoload]
+
+GameManager="*res://scripts/game_manager.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
