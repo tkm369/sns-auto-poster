@@ -1,49 +1,49 @@
 {
   "version": 1,
-  "updated_at": "2026-04-28 05:18",
+  "updated_at": "2026-04-30 07:56",
   "categories": {
     "片思い": {
-      "weight": 1.62,
-      "avg_likes": 6.8,
-      "post_count": 10
+      "weight": 1.67,
+      "avg_likes": 8.25,
+      "post_count": 12
     },
     "失恋": {
-      "weight": 1.86,
+      "weight": 1.77,
       "avg_likes": 9.47,
       "post_count": 15
     },
     "復縁": {
-      "weight": 1.62,
-      "avg_likes": 6.8,
-      "post_count": 5
+      "weight": 1.58,
+      "avg_likes": 7.17,
+      "post_count": 6
     },
     "恋愛あるある": {
-      "weight": 1.68,
-      "avg_likes": 7.43,
-      "post_count": 7
+      "weight": 1.54,
+      "avg_likes": 6.67,
+      "post_count": 9
     },
     "元カレ元カノ": {
-      "weight": 1.91,
-      "avg_likes": 10.0,
-      "post_count": 14
+      "weight": 1.74,
+      "avg_likes": 9.2,
+      "post_count": 17
     },
     "好きな人": {
-      "weight": 1.71,
-      "avg_likes": 7.86,
-      "post_count": 7
+      "weight": 1.73,
+      "avg_likes": 9.0,
+      "post_count": 9
     },
     "寂しい夜": {
-      "weight": 1.93,
-      "avg_likes": 10.25,
-      "post_count": 8
+      "weight": 1.74,
+      "avg_likes": 9.2,
+      "post_count": 10
     },
     "恋愛名言": {
       "weight": 2.0,
-      "avg_likes": 11.0,
+      "avg_likes": 12.36,
       "post_count": 11
     }
   },
-  "insights": "計測中（78件）。恋愛名言が最高eng 11.0",
+  "insights": "計測中（90件）。恋愛名言が最高eng 12.4",
   "generation_params": {
     "tone": "共感型",
     "length_range": [
@@ -58,15 +58,15 @@
     "light": 1.0,
     "line_chat": 1.0,
     "notebook": 1.0,
-    "list_card": 1.85
+    "list_card": 1.87
   },
   "format_weights": {
     "独白": 2.0,
-    "問いかけ": 1.76,
-    "ストーリー": 1.94,
+    "問いかけ": 1.77,
+    "ストーリー": 1.95,
     "qa": 1.0,
     "dialogue": 1.0,
-    "list": 1.77
+    "list": 1.81
   },
   "voice_format_weights": {
     "fortune": 1.0,
@@ -75,42 +75,42 @@
   },
   "ts_category": {
     "片思い": {
-      "alpha": 27.0,
-      "beta": 36.0
+      "alpha": 33.0,
+      "beta": 42.0
     },
     "失恋": {
-      "alpha": 46.0,
-      "beta": 59.0
+      "alpha": 52.0,
+      "beta": 68.0
     },
     "復縁": {
-      "alpha": 10.0,
-      "beta": 21.0
-    },
-    "恋愛あるある": {
-      "alpha": 14.0,
-      "beta": 30.0
-    },
-    "元カレ元カノ": {
-      "alpha": 71.0,
-      "beta": 34.0
-    },
-    "好きな人": {
-      "alpha": 21.0,
-      "beta": 18.0
-    },
-    "寂しい夜": {
-      "alpha": 39.0,
+      "alpha": 13.0,
       "beta": 24.0
     },
+    "恋愛あるある": {
+      "alpha": 17.0,
+      "beta": 36.0
+    },
+    "元カレ元カノ": {
+      "alpha": 82.0,
+      "beta": 40.0
+    },
+    "好きな人": {
+      "alpha": 26.0,
+      "beta": 22.0
+    },
+    "寂しい夜": {
+      "alpha": 44.0,
+      "beta": 29.0
+    },
     "恋愛名言": {
-      "alpha": 48.0,
-      "beta": 23.0
+      "alpha": 56.0,
+      "beta": 26.0
     }
   },
   "ts_card_style": {
     "xdark": {
-      "alpha": 150.0,
-      "beta": 127.0
+      "alpha": 183.0,
+      "beta": 155.0
     },
     "gradient": {
       "alpha": 1.0,
@@ -133,22 +133,22 @@
       "beta": 1.0
     },
     "list_card": {
-      "alpha": 8.0,
-      "beta": 14.0
+      "alpha": 12.0,
+      "beta": 17.0
     }
   },
   "ts_format": {
     "独白": {
-      "alpha": 166.0,
-      "beta": 89.0
+      "alpha": 192.0,
+      "beta": 108.0
     },
     "問いかけ": {
-      "alpha": 34.0,
-      "beta": 60.0
+      "alpha": 40.0,
+      "beta": 69.0
     },
     "ストーリー": {
-      "alpha": 64.0,
-      "beta": 78.0
+      "alpha": 75.0,
+      "beta": 89.0
     },
     "qa": {
       "alpha": 1.0,
@@ -159,8 +159,8 @@
       "beta": 1.0
     },
     "list": {
-      "alpha": 8.0,
-      "beta": 14.0
+      "alpha": 12.0,
+      "beta": 17.0
     }
   },
   "ts_voice_format": {
