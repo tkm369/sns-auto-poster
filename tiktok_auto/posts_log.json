@@ -1748,5 +1748,25 @@
     "saves": null,
     "shares": null,
     "last_checked": null
+  },
+  {
+    "id": "20260430_021337",
+    "posted_at": "2026-04-30T02:13:37.418455",
+    "content_type": "card",
+    "text": "名前を呼ばれる夢を見た。起きてから、なんとも言えない気分だった。",
+    "text_hash": "601277be41bc3500bc3939cdd1daf645",
+    "category": "元カレ元カノ",
+    "tone": "共感型",
+    "format": "独白",
+    "card_style": "xdark",
+    "posting_hour": 2,
+    "text_length": 32,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
