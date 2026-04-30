@@ -1848,5 +1848,25 @@
     "saves": null,
     "shares": null,
     "last_checked": null
+  },
+  {
+    "id": "20260501_003307",
+    "posted_at": "2026-05-01T00:33:07.621073",
+    "content_type": "card",
+    "text": "「また連絡するね」を信じる方が、信じない自分より好きだ。",
+    "text_hash": "c16272485bf6d28a5f8f75f29b78b2b1",
+    "category": "恋愛名言",
+    "tone": "共感型",
+    "format": "独白",
+    "card_style": "xdark",
+    "posting_hour": 0,
+    "text_length": 28,
+    "video_duration": 16.0,
+    "views": null,
+    "likes": null,
+    "comments": null,
+    "saves": null,
+    "shares": null,
+    "last_checked": null
   }
 ]
